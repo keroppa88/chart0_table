@@ -1,0 +1,38 @@
+name: Sync data from chart0
+
+on:
+  repository_dispatch:
+    types: [chart0-data-updated]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout chart0_table
+        uses: actions/checkout@v4
+
+      - name: Checkout chart0 repo
+        uses: actions/checkout@v4
+        with:
+          repository: keroppa88/chart0
+          path: chart0-source
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Sync data and financedata
+        run: |
+          rsync -av --delete --exclude='.git' chart0-source/data/ data/
+          rsync -av --delete --exclude='.git' chart0-source/financedata/ financedata/
+          rm -rf chart0-source
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ financedata/
+          if git diff --cached --quiet; then
+            echo "No changes detected"
+          else
+            git commit -m "Sync data and financedata from chart0"
+            git push
+          fi
