@@ -11,7 +11,9 @@ jobs:
     steps:
       - name: Checkout chart0_table
         uses: actions/checkout@v4
-
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          
       - name: Checkout chart0 repo
         uses: actions/checkout@v4
         with:
