@@ -240,12 +240,54 @@ let chartInstance = null;
    ============================================================ */
 document.addEventListener('DOMContentLoaded', init);
 
+async function fetchChartlistMap() {
+  const files = ['allchart.csv', 'allchartlist.csv'];
+  for (const file of files) {
+    try {
+      const res = await fetch(file);
+      if (!res.ok) continue;
+      const text = await res.text();
+      const map = new Map();
+      text.split(/\r?\n/).forEach(line => {
+        if (!line) return;
+        const idx = line.indexOf(',');
+        if (idx < 0) return;
+        const code = line.slice(0, idx).trim().replace(/^\uFEFF/, '');
+        const name = line.slice(idx + 1).trim();
+        if (!code || !name) return;
+        if (code.toLowerCase() === 'code' || code.toLowerCase() === 'ticker') return;
+        map.set(code, name);
+      });
+      if (map.size) return map;
+    } catch (e) {
+      // ignore and try fallback file
+    }
+  }
+  return null;
+}
+
+async function fillMissingNamesFromChartList(stocks) {
+  const needsFill = stocks.some(s => !s.name || s.name === s.code);
+  if (!needsFill) return;
+
+  const map = await fetchChartlistMap();
+  if (!map) return;
+
+  stocks.forEach(s => {
+    if (!s.name || s.name === s.code) {
+      const name = map.get(s.code);
+      if (name) s.name = name;
+    }
+  });
+}
+
 async function init() {
   buildHeader();
 
   try {
     const res = await fetch('stock_data.json');
     allStocks = await res.json();
+    await fillMissingNamesFromChartList(allStocks);
   } catch (e) {
     document.getElementById('loading').innerHTML =
       '<p style="color:#c00">stock_data.json の読み込みに失敗しました。<br>python3 build_data.py を実行してデータを生成してください。<br>また python3 -m http.server でサーバーを起動してアクセスしてください。</p>';
