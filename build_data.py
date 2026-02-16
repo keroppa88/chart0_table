@@ -16,6 +16,38 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 FINANCE_DIR = os.path.join(BASE_DIR, 'financedata')
 OUTPUT_FILE = os.path.join(BASE_DIR, 'stock_data.json')
+CHARTLIST_FILE = os.path.join(BASE_DIR, 'allchartlist.csv')
+
+# financedataの全数値フィールド
+FINANCE_NUM_FIELDS = [
+    'Sales', 'OP', 'OdP', 'NP', 'EPS', 'DEPS',
+    'TA', 'Eq', 'EqAR', 'BPS',
+    'CFO', 'CFI', 'CFF', 'CashEq',
+    'DivAnn', 'FDivAnn', 'FPayoutRatioAnn',
+    'FSales', 'FOP', 'FOdP', 'FNP', 'FEPS',
+    'NxFSales', 'NxFOP', 'NxFOdP', 'NxFNp', 'NxFEPS',
+]
+
+# financedataの文字列フィールド
+FINANCE_STR_FIELDS = ['CurFYEn', 'DiscDate', 'NxtFYEn']
+
+
+def load_chartlist():
+    """allchartlist.csv からコード→銘柄名のマッピングを読み込む。"""
+    mapping = {}
+    filepath = CHARTLIST_FILE
+    if not os.path.exists(filepath):
+        print(f"  警告: {filepath} が見つかりません")
+        return mapping
+    with open(filepath, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) >= 2:
+                code = row[0].strip()
+                name = row[1].strip()
+                if code:
+                    mapping[code] = name
+    return mapping
 
 
 def read_csv(filepath):
@@ -74,7 +106,7 @@ def find_price_on_date(price_by_date, sorted_dates, target_date):
     return None
 
 
-def process_stock(code, finance_path, price_path):
+def process_stock(code, finance_path, price_path, name):
     """1銘柄のデータを処理し、統合データを返す。"""
     try:
         finance_rows = read_csv(finance_path)
@@ -101,33 +133,34 @@ def process_stock(code, finance_path, price_path):
     # 最新の株価
     latest_price = price_by_date[sorted_dates[-1]]
 
-    # 各指標を最新の有効な値から独立して取得
-    profit = None
-    eps = None
-    bps = None
-    cf_operating = None
+    # 最新の財務データから全フィールドを取得
+    latest_finance = {}
+    # 文字列フィールド
+    for field in FINANCE_STR_FIELDS:
+        for row in reversed(finance_rows):
+            v = row.get(field, '').strip()
+            if v:
+                latest_finance[field] = v
+                break
+        if field not in latest_finance:
+            latest_finance[field] = None
 
-    for row in reversed(finance_rows):
-        if profit is None:
-            v = to_int(row.get('Profit'))
+    # 数値フィールド（各フィールドを独立に最新の有効値から取得）
+    for field in FINANCE_NUM_FIELDS:
+        for row in reversed(finance_rows):
+            v = to_float(row.get(field))
             if v is not None:
-                profit = v
-        if eps is None:
-            v = to_float(row.get('EarningsPerShare'))
-            if v is not None and v != 0:
-                eps = v
-        if bps is None:
-            v = to_float(row.get('BookValuePerShare'))
-            if v is not None and v != 0:
-                bps = v
-        if cf_operating is None:
-            v = to_int(row.get('CashFlowOperating'))
-            if v is not None and v != 0:
-                cf_operating = v
-        if all(x is not None for x in [profit, eps, bps, cf_operating]):
-            break
+                latest_finance[field] = v
+                break
+        if field not in latest_finance:
+            latest_finance[field] = None
 
     # 指標を計算
+    eps = latest_finance.get('EPS')
+    bps = latest_finance.get('BPS')
+    np_val = latest_finance.get('NP')
+    cfo = latest_finance.get('CFO')
+
     per = None
     if eps and eps != 0:
         per = round(latest_price / eps, 2)
@@ -141,10 +174,10 @@ def process_stock(code, finance_path, price_path):
         roe = round(eps / bps * 100, 2)
 
     pcfr = None
-    if cf_operating and cf_operating != 0 and eps and eps != 0 and profit and profit != 0:
-        shares = abs(profit / eps)
+    if cfo and cfo != 0 and eps and eps != 0 and np_val and np_val != 0:
+        shares = abs(np_val / eps)
         if shares > 0:
-            cfps = cf_operating / shares
+            cfps = cfo / shares
             if cfps != 0:
                 pcfr = round(latest_price / cfps, 2)
 
@@ -153,14 +186,14 @@ def process_stock(code, finance_path, price_path):
     # 財務データの履歴（各開示日ごと）
     finance_history = []
     for row in finance_rows:
-        date = row.get('DisclosedDate', '').strip()
+        date = row.get('DiscDate', '').strip()
         if not date:
             continue
 
-        entry_profit = to_int(row.get('Profit'))
-        entry_eps = to_float(row.get('EarningsPerShare'))
-        entry_bps = to_float(row.get('BookValuePerShare'))
-        entry_cf = to_int(row.get('CashFlowOperating'))
+        entry_np = to_float(row.get('NP'))
+        entry_eps = to_float(row.get('EPS'))
+        entry_bps = to_float(row.get('BPS'))
+        entry_cfo = to_float(row.get('CFO'))
 
         # その日の株価を取得
         price_at = find_price_on_date(price_by_date, sorted_dates, date)
@@ -179,19 +212,19 @@ def process_stock(code, finance_path, price_path):
             entry_roe = round(entry_eps / entry_bps * 100, 2)
 
         entry_pcfr = None
-        if (price_at and entry_cf and entry_cf != 0
+        if (price_at and entry_cfo and entry_cfo != 0
                 and entry_eps and entry_eps != 0
-                and entry_profit and entry_profit != 0):
-            entry_shares = abs(entry_profit / entry_eps)
+                and entry_np and entry_np != 0):
+            entry_shares = abs(entry_np / entry_eps)
             if entry_shares > 0:
-                entry_cfps = entry_cf / entry_shares
+                entry_cfps = entry_cfo / entry_shares
                 if entry_cfps != 0:
                     entry_pcfr = round(price_at / entry_cfps, 2)
 
         # [date, profit, per, pbr, roe, pcfr]
         finance_history.append([
             date,
-            entry_profit,
+            entry_np,
             entry_per,
             entry_pbr,
             entry_roe,
@@ -201,21 +234,39 @@ def process_stock(code, finance_path, price_path):
     # 月次株価データ（チャート用）
     monthly_prices = get_quarterly_prices(price_rows)
 
-    return {
+    result = {
         'code': code,
+        'name': name,
         'price': latest_price,
-        'profit': profit,
-        'per': per,
-        'pbr': pbr,
-        'roe': roe,
-        'pcfr': pcfr,
-        'ph': monthly_prices,      # [[date, close], ...]
-        'fh': finance_history       # [[date, profit, per, pbr, roe, pcfr], ...]
     }
+
+    # 文字列フィールド
+    for field in FINANCE_STR_FIELDS:
+        result[field] = latest_finance.get(field)
+
+    # 数値フィールド
+    for field in FINANCE_NUM_FIELDS:
+        result[field] = latest_finance.get(field)
+
+    # 計算指標
+    result['per'] = per
+    result['pbr'] = pbr
+    result['roe'] = roe
+    result['pcfr'] = pcfr
+
+    # 履歴データ
+    result['ph'] = monthly_prices       # [[date, close], ...]
+    result['fh'] = finance_history      # [[date, profit, per, pbr, roe, pcfr], ...]
+
+    return result
 
 
 def main():
     print("日本株データを処理中...")
+
+    # 銘柄名マッピングを読み込み
+    chartlist = load_chartlist()
+    print(f"  銘柄名マッピング: {len(chartlist)} 件")
 
     # financedata内の全CSVファイルを取得
     finance_files = sorted(glob.glob(os.path.join(FINANCE_DIR, '*.csv')))
@@ -232,7 +283,8 @@ def main():
             skipped += 1
             continue
 
-        result = process_stock(code, fpath, price_path)
+        name = chartlist.get(code, code)
+        result = process_stock(code, fpath, price_path, name)
         if result:
             stocks.append(result)
 

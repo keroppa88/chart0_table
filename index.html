@@ -45,38 +45,32 @@ body{
   max-height:calc(100vh - 52px);
 }
 table{
-  width:100%;
+  width:max-content;
   border-collapse:collapse;
   font-size:13px;
-  table-layout:fixed;
 }
-colgroup col.col-rank{width:56px}
-colgroup col.col-code{width:80px}
-colgroup col.col-name{width:80px}
-colgroup col.col-price{width:100px}
-colgroup col.col-profit{width:120px}
-colgroup col.col-num{width:90px}
 
 thead{position:sticky;top:0;z-index:10}
 th{
   background:#303f9f;
   color:#fff;
-  padding:10px 10px;
+  padding:10px 8px;
   text-align:right;
   cursor:pointer;
   white-space:nowrap;
   user-select:none;
   border-right:1px solid rgba(255,255,255,.08);
   font-weight:600;
-  font-size:12px;
+  font-size:11px;
   letter-spacing:.3px;
+  min-width:70px;
 }
-th:first-child{text-align:center}
+th:first-child{text-align:center;min-width:40px}
 th:hover{background:#3949ab}
 th .sort-icon{font-size:10px;margin-left:3px;opacity:.7}
 
 td{
-  padding:7px 10px;
+  padding:7px 8px;
   text-align:right;
   border-bottom:1px solid #e8eaf0;
   cursor:pointer;
@@ -85,7 +79,8 @@ td{
 }
 td:first-child{text-align:center;color:#888;font-size:12px}
 td.col-code{text-align:left;font-weight:600;color:#1a237e}
-td.col-name{text-align:left;font-size:12px}
+td.col-name{text-align:left;font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+td.col-date{text-align:center;font-size:11px;color:#555}
 
 tr:nth-child(even) td{background:#f8f9fc}
 tr:hover td{background:#e3f2fd}
@@ -169,17 +164,6 @@ td:hover{background:#bbdefb !important}
 
 <div class="table-wrap" id="tableWrap" style="display:none">
   <table>
-    <colgroup>
-      <col class="col-rank">
-      <col class="col-code">
-      <col class="col-name">
-      <col class="col-price">
-      <col class="col-profit">
-      <col class="col-num">
-      <col class="col-num">
-      <col class="col-num">
-      <col class="col-num">
-    </colgroup>
     <thead><tr id="headRow"></tr></thead>
     <tbody id="tbody"></tbody>
   </table>
@@ -202,19 +186,48 @@ td:hover{background:#bbdefb !important}
    データ定義
    ============================================================ */
 const COLS = [
-  {key:'rank',  label:'#',          sortable:false, chart:false},
-  {key:'code',  label:'コード',     sortable:true,  chart:false, align:'left'},
-  {key:'name',  label:'銘柄名',     sortable:true,  chart:false, align:'left'},
-  {key:'price', label:'株価',       sortable:true,  chart:true,  color:'#1565c0', unit:'円'},
-  {key:'profit',label:'利益',       sortable:true,  chart:true,  color:'#2e7d32', unit:'百万円'},
-  {key:'per',   label:'PER',       sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍'},
-  {key:'pbr',   label:'PBR',       sortable:true,  chart:true,  color:'#e65100', unit:'倍'},
-  {key:'roe',   label:'ROE',       sortable:true,  chart:true,  color:'#00838f', unit:'%'},
-  {key:'pcfr',  label:'PCFR',      sortable:true,  chart:true,  color:'#4527a0', unit:'倍'},
+  {key:'rank',    label:'#',                      sortable:false, chart:false, type:'rank'},
+  {key:'code',    label:'銘柄コード',              sortable:true,  chart:false, type:'code'},
+  {key:'name',    label:'銘柄名',                  sortable:true,  chart:false, type:'name'},
+  {key:'price',   label:'株価',                    sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'price'},
+  {key:'CurFYEn', label:'当事業年度終了日',         sortable:true,  chart:false, type:'date'},
+  {key:'DiscDate',label:'開示日',                  sortable:true,  chart:false, type:'date'},
+  {key:'NxtFYEn', label:'翌事業年度終了日',         sortable:true,  chart:false, type:'date'},
+  {key:'Sales',   label:'売上高',                  sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'OP',      label:'営業利益',                sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'OdP',     label:'経常利益',                sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NP',      label:'当期純利益',              sortable:true,  chart:true,  color:'#2e7d32', unit:'百万円', type:'bignum'},
+  {key:'EPS',     label:'一株あたり当期純利益',     sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'DEPS',    label:'潜在株式調整後EPS',        sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'TA',      label:'総資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
+  {key:'Eq',      label:'純資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
+  {key:'EqAR',    label:'自己資本比率',             sortable:true,  chart:false, color:'#00838f', unit:'%', type:'percent'},
+  {key:'BPS',     label:'一株あたり純資産',         sortable:true,  chart:false, color:'#e65100', unit:'円', type:'decimal'},
+  {key:'CFO',     label:'営業CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CFI',     label:'投資CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CFF',     label:'財務CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CashEq',  label:'現金同等物',              sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'DivAnn',  label:'配当実績',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
+  {key:'FDivAnn', label:'配当予想',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
+  {key:'FPayoutRatioAnn', label:'予想配当性向',     sortable:true,  chart:false, color:'#c62828', unit:'%', type:'percent'},
+  {key:'FSales',  label:'売上高予想',              sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'FOP',     label:'営業利益予想',            sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FOdP',    label:'経常利益予想',            sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FNP',     label:'純利益予想',              sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FEPS',    label:'EPS予想',                 sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'NxFSales',label:'売上高予想(翌)',           sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'NxFOP',   label:'営業利益予想(翌)',         sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFOdP',  label:'経常利益予想(翌)',         sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFNp',   label:'純利益予想(翌)',           sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'per',     label:'PER',                    sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
+  {key:'pbr',     label:'PBR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
+  {key:'roe',     label:'ROE',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
+  {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
 ];
 
-// financeHistory index mapping: [date, profit, per, pbr, roe, pcfr]
-const FH = {profit:1, per:2, pbr:3, roe:4, pcfr:5};
+// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr]
+const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5};
 
 let allStocks = [];   // 全データ
 let viewStocks = [];  // フィルタ後
@@ -238,9 +251,6 @@ async function init() {
       '<p style="color:#c00">stock_data.json の読み込みに失敗しました。<br>python3 build_data.py を実行してデータを生成してください。<br>また python3 -m http.server でサーバーを起動してアクセスしてください。</p>';
     return;
   }
-
-  // 銘柄名はデータに含まれないためコードで代替
-  allStocks.forEach(s => { s.name = s.code; });
 
   viewStocks = allStocks.slice();
   sortBy('code', true);
@@ -266,7 +276,7 @@ function buildHeader() {
   COLS.forEach(col => {
     const th = document.createElement('th');
     th.textContent = col.label;
-    if (col.align === 'left') th.style.textAlign = 'left';
+    if (col.type === 'code' || col.type === 'name') th.style.textAlign = 'left';
     if (col.sortable) {
       th.dataset.key = col.key;
       th.addEventListener('click', () => onHeaderClick(col.key));
@@ -284,33 +294,60 @@ function buildHeader() {
    ============================================================ */
 function renderTable() {
   const tbody = document.getElementById('tbody');
-  // 仮想DOM的に一括挿入
   const fragment = document.createDocumentFragment();
 
   viewStocks.forEach((s, i) => {
     const tr = document.createElement('tr');
 
-    COLS.forEach((col, ci) => {
+    COLS.forEach(col => {
       const td = document.createElement('td');
+      const val = s[col.key];
 
-      if (col.key === 'rank') {
-        td.textContent = i + 1;
-      } else if (col.key === 'code') {
-        td.textContent = s.code;
-        td.className = 'col-code';
-      } else if (col.key === 'name') {
-        td.textContent = s.name;
-        td.className = 'col-name';
-      } else if (col.key === 'price') {
-        td.textContent = s.price != null ? formatNum(s.price) : '-';
-      } else if (col.key === 'profit') {
-        const val = s.profit != null ? Math.round(s.profit / 1000000) : null;
-        td.textContent = val != null ? formatNum(val) : '-';
-        if (val != null && val < 0) td.className = 'negative';
-      } else {
-        const v = s[col.key];
-        td.textContent = v != null ? formatDec(v) : '-';
-        if (v != null && v < 0) td.className = 'negative';
+      switch (col.type) {
+        case 'rank':
+          td.textContent = i + 1;
+          break;
+        case 'code':
+          td.textContent = s.code;
+          td.className = 'col-code';
+          break;
+        case 'name':
+          td.textContent = s.name || s.code;
+          td.className = 'col-name';
+          td.title = s.name || s.code;
+          break;
+        case 'price':
+          td.textContent = val != null ? formatNum(val) : '-';
+          break;
+        case 'date':
+          td.textContent = val || '-';
+          td.className = 'col-date';
+          break;
+        case 'bignum':
+          if (val != null) {
+            td.textContent = formatBigNum(val);
+            if (val < 0) td.className = 'negative';
+          } else {
+            td.textContent = '-';
+          }
+          break;
+        case 'percent':
+          if (val != null) {
+            td.textContent = formatDec(val * 100) + '%';
+            if (val < 0) td.className = 'negative';
+          } else {
+            td.textContent = '-';
+          }
+          break;
+        case 'decimal':
+        default:
+          if (val != null) {
+            td.textContent = formatDec(val);
+            if (val < 0) td.className = 'negative';
+          } else {
+            td.textContent = '-';
+          }
+          break;
       }
 
       // クリックでチャート表示
@@ -345,8 +382,8 @@ function sortBy(key, asc) {
   sortAsc = asc;
 
   viewStocks.sort((a, b) => {
-    let va = getSortVal(a, key);
-    let vb = getSortVal(b, key);
+    let va = a[key];
+    let vb = b[key];
     // null は最後
     if (va == null && vb == null) return 0;
     if (va == null) return 1;
@@ -359,13 +396,6 @@ function sortBy(key, asc) {
 
   updateSortIcons();
   renderTable();
-}
-
-function getSortVal(stock, key) {
-  if (key === 'profit') {
-    return stock.profit != null ? stock.profit : null;
-  }
-  return stock[key] != null ? stock[key] : null;
 }
 
 function updateSortIcons() {
@@ -389,7 +419,7 @@ function onSearch() {
     viewStocks = allStocks.slice();
   } else {
     viewStocks = allStocks.filter(s =>
-      s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
+      s.code.toLowerCase().includes(q) || (s.name && s.name.toLowerCase().includes(q))
     );
   }
   if (sortKey) sortBy(sortKey, sortAsc);
@@ -412,7 +442,7 @@ function showChart(stock, colKey) {
   let labels, values, title, unit, bgColor;
   unit = colDef.unit;
   bgColor = colDef.color;
-  title = stock.code + ' - ' + colDef.label;
+  title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.label;
 
   if (colKey === 'price') {
     // 月次株価データ
@@ -429,7 +459,7 @@ function showChart(stock, colKey) {
     const filtered = fh.filter(row => row[idx] != null);
     labels = filtered.map(row => row[0]);
 
-    if (colKey === 'profit') {
+    if (colKey === 'NP') {
       values = filtered.map(row => Math.round(row[idx] / 1000000));
     } else {
       values = filtered.map(row => row[idx]);
@@ -530,6 +560,27 @@ function formatDec(n) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+}
+
+function formatBigNum(n) {
+  if (n == null) return '-';
+  // 億単位で表示
+  const oku = n / 100000000;
+  if (Math.abs(oku) >= 1) {
+    return oku.toLocaleString('ja-JP', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }) + '億';
+  }
+  // 百万単位
+  const hyakuman = n / 1000000;
+  if (Math.abs(hyakuman) >= 1) {
+    return hyakuman.toLocaleString('ja-JP', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }) + '百万';
+  }
+  return formatNum(n);
 }
 
 function formatCompact(n) {
