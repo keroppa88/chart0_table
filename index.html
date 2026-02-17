@@ -57,13 +57,14 @@ th{
   padding:10px 8px;
   text-align:right;
   cursor:pointer;
-  white-space:nowrap;
+  white-space:normal;
   user-select:none;
   border-right:1px solid rgba(255,255,255,.08);
   font-weight:600;
   font-size:11px;
   letter-spacing:.3px;
   min-width:70px;
+  line-height:1.4;
 }
 th:first-child{text-align:center;min-width:40px}
 th:hover{background:#3949ab}
@@ -208,11 +209,11 @@ const COLS = [
   {key:'CurFYEn', label:'当事業年度終了日',         sortable:true,  chart:false, type:'date'},
   {key:'DiscDate',label:'開示日',                  sortable:true,  chart:false, type:'date'},
   {key:'NxtFYEn', label:'翌事業年度終了日',         sortable:true,  chart:false, type:'date'},
-  {key:'Sales',   label:'売上高',                  sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
-  {key:'OP',      label:'営業利益',                sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'OdP',     label:'経常利益',                sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'NP',      label:'当期純利益',              sortable:true,  chart:true,  color:'#2e7d32', unit:'百万円', type:'bignum'},
-  {key:'EPS',     label:'一株あたり当期純利益',     sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'Sales',   label:'売上高（当該年度・現時点）',          sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum', quarterly:true, chartLabel:'四半期売上高（実績）'},
+  {key:'OP',      label:'営業利益（当該年度・現時点）',        sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum', quarterly:true, chartLabel:'四半期営業利益（実績）'},
+  {key:'OdP',     label:'経常利益（当該年度・現時点）',        sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum', quarterly:true, chartLabel:'四半期経常利益（実績）'},
+  {key:'NP',      label:'当期純利益（当該年度・現時点）',      sortable:true,  chart:true,  color:'#2e7d32', unit:'百万円', type:'bignum', quarterly:true, chartLabel:'四半期当期純利益（実績）'},
+  {key:'EPS',     label:'一株当たり当期純利益（当該年度・現時点）', sortable:true, chart:true, color:'#6a1b9a', unit:'円', type:'decimal', quarterly:true, chartLabel:'四半期一株当たり当期純利益（実績）'},
   {key:'DEPS',    label:'潜在株式調整後EPS',        sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
   {key:'TA',      label:'総資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
   {key:'Eq',      label:'純資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
@@ -248,8 +249,8 @@ const COLS = [
   {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
 ];
 
-// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap]
-const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9, BPS:10, CFO:11, CashEq:12, MarketCap:13};
+// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap, CurFYEn]
+const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9, BPS:10, CFO:11, CashEq:12, MarketCap:13, CurFYEn:14};
 
 let allStocks = [];   // 全データ
 let viewStocks = [];  // フィルタ後
@@ -464,14 +465,21 @@ function showChart(stock, colKey) {
   let labels, values, title, unit, bgColor;
   unit = colDef.unit;
   bgColor = colDef.color;
-  title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.label;
-
-  if (colKey === 'price') {
+  if (colDef.quarterly) {
+    // 四半期別表示（累積値→四半期ごとに変換）
+    title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.chartLabel;
+    const result = computeQuarterlyData(stock, colKey);
+    labels = result.labels;
+    values = result.values;
+    if (['NP','Sales','OP','OdP'].includes(colKey)) unit = '百万円';
+  } else if (colKey === 'price') {
+    title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.label;
     // 月次株価データ
     const ph = stock.ph || [];
     labels = ph.map(p => p[0]);
     values = ph.map(p => p[1]);
   } else {
+    title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.label;
     // 財務データ履歴
     const fh = stock.fh || [];
     const idx = FH[colKey];
@@ -517,7 +525,7 @@ function showChart(stock, colKey) {
     data: {
       labels: labels,
       datasets: [{
-        label: colDef.label,
+        label: colDef.chartLabel || colDef.label,
         data: values,
         backgroundColor: bgColors,
         borderColor: borderColors,
@@ -532,7 +540,7 @@ function showChart(stock, colKey) {
         legend: {display: false},
         tooltip: {
           callbacks: {
-            label: ctx => colDef.label + ': ' + formatNum(ctx.parsed.y) + ' ' + unit
+            label: ctx => (colDef.chartLabel || colDef.label) + ': ' + formatNum(ctx.parsed.y) + ' ' + unit
           }
         }
       },
@@ -559,6 +567,63 @@ function showChart(stock, colKey) {
   });
 
   document.getElementById('overlay').classList.add('active');
+}
+
+/* ============================================================
+   四半期データ変換（累積値→四半期ごと）
+   ============================================================ */
+function computeQuarterlyData(stock, colKey) {
+  const fh = stock.fh || [];
+  const idx = FH[colKey];
+  const fyIdx = FH.CurFYEn;
+
+  // CurFYEnでグループ化
+  const fyGroups = {};
+  for (const row of fh) {
+    const fy = row[fyIdx];
+    const val = row[idx];
+    if (!fy || val == null) continue;
+    if (!fyGroups[fy]) fyGroups[fy] = [];
+    fyGroups[fy].push({date: row[0], value: val});
+  }
+
+  const labels = [];
+  const values = [];
+
+  // 事業年度でソート
+  const sortedFYs = Object.keys(fyGroups).sort();
+
+  for (const fy of sortedFYs) {
+    const entries = fyGroups[fy];
+    // 開示日でソート
+    entries.sort((a, b) => a.date.localeCompare(b.date));
+
+    // CurFYEnからFY表示用ラベルを生成（例: "2022-03-31" → "FY2021"）
+    const fyYear = fy.substring(0, 4);
+    const fyMonth = parseInt(fy.substring(5, 7));
+    // 事業年度の開始年: 決算月が1-3月なら前年度開始
+    const startYear = fyMonth <= 3 ? parseInt(fyYear) - 1 : parseInt(fyYear);
+
+    // 累積値→四半期値に変換（最大4四半期）
+    let prevCumulative = 0;
+    const maxQ = Math.min(entries.length, 4);
+    for (let i = 0; i < maxQ; i++) {
+      const qNum = i + 1;
+      const qValue = entries[i].value - prevCumulative;
+      prevCumulative = entries[i].value;
+
+      labels.push(startYear + 'Q' + qNum);
+
+      // 百万円単位に変換（EPS以外）
+      if (colKey === 'EPS') {
+        values.push(Math.round(qValue * 100) / 100);
+      } else {
+        values.push(Math.round(qValue / 1000000));
+      }
+    }
+  }
+
+  return {labels, values};
 }
 
 function closeModal() {
