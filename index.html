@@ -193,11 +193,11 @@ const COLS = [
   {key:'CurFYEn', label:'当事業年度終了日',         sortable:true,  chart:false, type:'date'},
   {key:'DiscDate',label:'開示日',                  sortable:true,  chart:false, type:'date'},
   {key:'NxtFYEn', label:'翌事業年度終了日',         sortable:true,  chart:false, type:'date'},
-  {key:'Sales',   label:'売上高',                  sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
-  {key:'OP',      label:'営業利益',                sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'OdP',     label:'経常利益',                sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'Sales',   label:'売上高',                  sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'OP',      label:'営業利益',                sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'OdP',     label:'経常利益',                sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
   {key:'NP',      label:'当期純利益',              sortable:true,  chart:true,  color:'#2e7d32', unit:'百万円', type:'bignum'},
-  {key:'EPS',     label:'一株あたり当期純利益',     sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'EPS',     label:'一株あたり当期純利益',     sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
   {key:'DEPS',    label:'潜在株式調整後EPS',        sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
   {key:'TA',      label:'総資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
   {key:'Eq',      label:'純資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
@@ -220,14 +220,18 @@ const COLS = [
   {key:'NxFOdP',  label:'経常利益予想(翌)',         sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
   {key:'NxFNp',   label:'純利益予想(翌)',           sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
   {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'DivYield',label:'配当利回り',               sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
+  {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
+  {key:'MarketCap',label:'時価総額',               sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
   {key:'per',     label:'PER',                    sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
   {key:'pbr',     label:'PBR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
   {key:'roe',     label:'ROE',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
+  {key:'roa',     label:'ROA',                    sortable:true,  chart:false, color:'#00838f', unit:'%', type:'decimal'},
   {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
 ];
 
-// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr]
-const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5};
+// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS]
+const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9};
 
 let allStocks = [];   // 全データ
 let viewStocks = [];  // フィルタ後
@@ -459,8 +463,9 @@ function showChart(stock, colKey) {
     const filtered = fh.filter(row => row[idx] != null);
     labels = filtered.map(row => row[0]);
 
-    if (colKey === 'NP') {
+    if (['NP','Sales','OP','OdP'].includes(colKey)) {
       values = filtered.map(row => Math.round(row[idx] / 1000000));
+      unit = '百万円';
     } else {
       values = filtered.map(row => row[idx]);
     }
