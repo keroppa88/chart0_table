@@ -68,6 +68,11 @@ th{
 }
 th:first-child{text-align:center;min-width:40px}
 th:hover{background:#3949ab}
+th[draggable="true"]{cursor:grab}
+th[draggable="true"]:active{cursor:grabbing}
+th.dragging{opacity:.4}
+th.drag-over-left{box-shadow:inset 3px 0 0 #ffeb3b}
+th.drag-over-right{box-shadow:inset -3px 0 0 #ffeb3b}
 th .sort-icon{font-size:10px;margin-left:3px;opacity:.7}
 
 td{
@@ -263,6 +268,7 @@ let viewStocks = [];  // フィルタ後
 let sortKey = null;
 let sortAsc = true;
 let chartInstance = null;
+let dragSrcIdx = null;
 
 /* ============================================================
    初期化
@@ -302,7 +308,8 @@ async function init() {
    ============================================================ */
 function buildHeader() {
   const tr = document.getElementById('headRow');
-  COLS.forEach(col => {
+  tr.innerHTML = '';
+  COLS.forEach((col, i) => {
     const th = document.createElement('th');
     th.textContent = col.label;
     if (col.type === 'code' || col.type === 'name') th.style.textAlign = 'left';
@@ -313,6 +320,46 @@ function buildHeader() {
       span.className = 'sort-icon';
       span.id = 'sort-' + col.key;
       th.appendChild(span);
+    }
+    // 4列目以降はドラッグ&ドロップで並べ替え可能
+    if (i >= 3) {
+      th.draggable = true;
+      th.addEventListener('dragstart', e => {
+        dragSrcIdx = COLS.indexOf(col);
+        th.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      th.addEventListener('dragend', () => {
+        th.classList.remove('dragging');
+        tr.querySelectorAll('th').forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
+        dragSrcIdx = null;
+      });
+      th.addEventListener('dragover', e => {
+        if (dragSrcIdx === null) return;
+        const targetIdx = COLS.indexOf(col);
+        if (targetIdx < 3 || targetIdx === dragSrcIdx) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        tr.querySelectorAll('th').forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
+        if (dragSrcIdx < targetIdx) {
+          th.classList.add('drag-over-right');
+        } else {
+          th.classList.add('drag-over-left');
+        }
+      });
+      th.addEventListener('dragleave', () => {
+        th.classList.remove('drag-over-left', 'drag-over-right');
+      });
+      th.addEventListener('drop', e => {
+        e.preventDefault();
+        const targetIdx = COLS.indexOf(col);
+        if (targetIdx < 3 || dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+        const [moved] = COLS.splice(dragSrcIdx, 1);
+        COLS.splice(targetIdx, 0, moved);
+        buildHeader();
+        updateSortIcons();
+        renderTable();
+      });
     }
     tr.appendChild(th);
   });
