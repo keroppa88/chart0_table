@@ -184,6 +184,31 @@ def process_stock(code, finance_path, price_path, name):
             if cfps != 0:
                 pcfr = round(latest_price / cfps, 2)
 
+    # 配当利回り
+    div_yield = None
+    div_ann = latest_finance.get('DivAnn')
+    if div_ann and latest_price and latest_price != 0:
+        div_yield = round(div_ann / latest_price * 100, 2)
+
+    # 予想配当利回り
+    fdiv_yield = None
+    fdiv_ann = latest_finance.get('FDivAnn')
+    if fdiv_ann and latest_price and latest_price != 0:
+        fdiv_yield = round(fdiv_ann / latest_price * 100, 2)
+
+    # ROA
+    roa = None
+    ta = latest_finance.get('TA')
+    if np_val is not None and ta and ta != 0:
+        roa = round(np_val / ta * 100, 2)
+
+    # 時価総額
+    market_cap = None
+    if eps and eps != 0 and np_val is not None:
+        shares = abs(np_val / eps)
+        if shares > 0:
+            market_cap = round(latest_price * shares)
+
     # --- 過去データの構築 ---
 
     # 財務データの履歴（各開示日ごと）
@@ -224,14 +249,22 @@ def process_stock(code, finance_path, price_path, name):
                 if entry_cfps != 0:
                     entry_pcfr = round(price_at / entry_cfps, 2)
 
-        # [date, profit, per, pbr, roe, pcfr]
+        entry_sales = to_float(row.get('Sales'))
+        entry_op = to_float(row.get('OP'))
+        entry_odp = to_float(row.get('OdP'))
+
+        # [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS]
         finance_history.append([
             date,
             entry_np,
             entry_per,
             entry_pbr,
             entry_roe,
-            entry_pcfr
+            entry_pcfr,
+            entry_sales,
+            entry_op,
+            entry_odp,
+            entry_eps,
         ])
 
     # 月次株価データ（チャート用）
@@ -256,6 +289,10 @@ def process_stock(code, finance_path, price_path, name):
     result['pbr'] = pbr
     result['roe'] = roe
     result['pcfr'] = pcfr
+    result['DivYield'] = div_yield
+    result['FDivYield'] = fdiv_yield
+    result['roa'] = roa
+    result['MarketCap'] = market_cap
 
     # 履歴データ
     result['ph'] = monthly_prices       # [[date, close], ...]
