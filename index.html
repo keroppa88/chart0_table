@@ -66,6 +66,12 @@ th{
   min-width:70px;
   line-height:1.4;
 }
+th .th-label{
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
 th:first-child{text-align:center;min-width:40px}
 th:hover{background:#3949ab}
 th[draggable="true"]{cursor:grab}
@@ -301,6 +307,34 @@ async function init() {
   });
   document.getElementById('btnClose').addEventListener('click', closeModal);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // 矢印キーでテーブルスクロール
+  const scrollStep = 100;
+  document.addEventListener('keydown', e => {
+    // 検索ボックスにフォーカス中は無効
+    if (document.activeElement === document.getElementById('searchBox')) return;
+    // モーダル表示中は無効
+    if (document.getElementById('overlay').classList.contains('active')) return;
+    const wrap = document.getElementById('tableWrap');
+    switch (e.key) {
+      case 'ArrowRight':
+        wrap.scrollLeft += scrollStep;
+        e.preventDefault();
+        break;
+      case 'ArrowLeft':
+        wrap.scrollLeft -= scrollStep;
+        e.preventDefault();
+        break;
+      case 'ArrowDown':
+        wrap.scrollTop += scrollStep;
+        e.preventDefault();
+        break;
+      case 'ArrowUp':
+        wrap.scrollTop -= scrollStep;
+        e.preventDefault();
+        break;
+    }
+  });
 }
 
 /* ============================================================
@@ -311,7 +345,11 @@ function buildHeader() {
   tr.innerHTML = '';
   COLS.forEach((col, i) => {
     const th = document.createElement('th');
-    th.textContent = col.label;
+    th.title = col.label;
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'th-label';
+    labelSpan.textContent = col.label;
+    th.appendChild(labelSpan);
     if (col.type === 'code' || col.type === 'name') th.style.textAlign = 'left';
     if (col.sortable) {
       th.dataset.key = col.key;
@@ -662,6 +700,9 @@ function computeQuarterlyData(stock, colKey) {
     const fyMonth = parseInt(fy.substring(5, 7));
     // 事業年度の開始年: 決算月が1-3月なら前年度開始
     const startYear = fyMonth <= 3 ? parseInt(fyYear) - 1 : parseInt(fyYear);
+
+    // 2020年はデータ不足のためスキップ
+    if (startYear === 2020) continue;
 
     // 累積値→四半期値に変換（最大4四半期）
     let prevCumulative = 0;
