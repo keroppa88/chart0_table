@@ -79,7 +79,22 @@ td{
 }
 td:first-child{text-align:center;color:#888;font-size:12px}
 td.col-code{text-align:left;font-weight:600;color:#1a237e}
-td.col-name{text-align:left;font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+td.col-name{text-align:left;font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== 左3列 (#, コード, 銘柄名) を固定 ===== */
+th:nth-child(1),td:nth-child(1){position:sticky;left:0;z-index:5;background:#303f9f}
+th:nth-child(2),td:nth-child(2){position:sticky;left:40px;z-index:5}
+th:nth-child(3),td:nth-child(3){position:sticky;left:120px;z-index:5}
+td:nth-child(1){background:#f8f9fc}
+td:nth-child(2),td:nth-child(3){background:#fff}
+tr:nth-child(even) td:nth-child(1),
+tr:nth-child(even) td:nth-child(2),
+tr:nth-child(even) td:nth-child(3){background:#f0f1f6}
+tr:hover td:nth-child(1),
+tr:hover td:nth-child(2),
+tr:hover td:nth-child(3){background:#e3f2fd}
+th:nth-child(2),th:nth-child(3){background:#303f9f}
+td:nth-child(3){border-right:2px solid #c5cae9}
 td.col-date{text-align:center;font-size:11px;color:#555}
 
 tr:nth-child(even) td{background:#f8f9fc}
@@ -202,11 +217,11 @@ const COLS = [
   {key:'TA',      label:'総資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
   {key:'Eq',      label:'純資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
   {key:'EqAR',    label:'自己資本比率',             sortable:true,  chart:false, color:'#00838f', unit:'%', type:'percent'},
-  {key:'BPS',     label:'一株あたり純資産',         sortable:true,  chart:false, color:'#e65100', unit:'円', type:'decimal'},
-  {key:'CFO',     label:'営業CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'BPS',     label:'一株あたり純資産',         sortable:true,  chart:true,  color:'#e65100', unit:'円', type:'decimal'},
+  {key:'CFO',     label:'営業CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
   {key:'CFI',     label:'投資CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
   {key:'CFF',     label:'財務CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
-  {key:'CashEq',  label:'現金同等物',              sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CashEq',  label:'現金同等物',              sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
   {key:'DivAnn',  label:'配当実績',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
   {key:'FDivAnn', label:'配当予想',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
   {key:'FPayoutRatioAnn', label:'予想配当性向',     sortable:true,  chart:false, color:'#c62828', unit:'%', type:'percent'},
@@ -222,7 +237,7 @@ const COLS = [
   {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
   {key:'DivYield',label:'配当利回り',               sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
   {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
-  {key:'MarketCap',label:'時価総額',               sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'MarketCap',label:'時価総額',               sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
   {key:'per',     label:'PER',                    sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
   {key:'fper',    label:'予想PER',                 sortable:true,  chart:false, color:'#6a1b9a', unit:'倍', type:'decimal'},
   {key:'pbr',     label:'PBR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
@@ -233,8 +248,8 @@ const COLS = [
   {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
 ];
 
-// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS]
-const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9};
+// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap]
+const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9, BPS:10, CFO:11, CashEq:12, MarketCap:13};
 
 let allStocks = [];   // 全データ
 let viewStocks = [];  // フィルタ後

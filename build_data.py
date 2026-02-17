@@ -273,8 +273,16 @@ def process_stock(code, finance_path, price_path, name):
         entry_sales = to_float(row.get('Sales'))
         entry_op = to_float(row.get('OP'))
         entry_odp = to_float(row.get('OdP'))
+        entry_cashEq = to_float(row.get('CashEq'))
 
-        # [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS]
+        # 履歴用の時価総額
+        entry_market_cap = None
+        if price_at and entry_eps and entry_eps != 0 and entry_np and entry_np != 0:
+            entry_shares = abs(entry_np / entry_eps)
+            if entry_shares > 0:
+                entry_market_cap = round(price_at * entry_shares)
+
+        # [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap]
         finance_history.append([
             date,
             entry_np,
@@ -286,6 +294,10 @@ def process_stock(code, finance_path, price_path, name):
             entry_op,
             entry_odp,
             entry_eps,
+            entry_bps,
+            entry_cfo,
+            entry_cashEq,
+            entry_market_cap,
         ])
 
     # 月次株価データ（チャート用）
