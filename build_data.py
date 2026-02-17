@@ -105,6 +105,20 @@ def find_price_on_date(price_by_date, sorted_dates, target_date):
     return None
 
 
+def find_price_on_or_after_date(price_by_date, sorted_dates, target_date):
+    """指定日付またはその翌営業日の終値を取得する。
+
+    決算発表は通常引け後に行われるため、発表当日の株価がある場合は
+    その終値を、ない場合は翌営業日の終値を返す。
+    """
+    if target_date in price_by_date:
+        return price_by_date[target_date]
+    for d in sorted_dates:
+        if d >= target_date:
+            return price_by_date[d]
+    return None
+
+
 def process_stock(code, finance_path, price_path, name):
     """1銘柄のデータを処理し、統合データを返す。"""
     try:
@@ -144,12 +158,16 @@ def process_stock(code, finance_path, price_path, name):
         if field not in latest_finance:
             latest_finance[field] = None
 
-    # 数値フィールド（各フィールドを独立に最新の有効値から取得）
+    # 数値フィールド（各フィールドを独立に最新の有効値から取得し、開示日も記録）
+    field_disc_dates = {}
     for field in FINANCE_NUM_FIELDS:
         for row in reversed(finance_rows):
             v = to_float(row.get(field))
             if v is not None:
                 latest_finance[field] = v
+                disc_date = row.get('DiscDate', '').strip()
+                if disc_date:
+                    field_disc_dates[field] = disc_date
                 break
         if field not in latest_finance:
             latest_finance[field] = None
@@ -163,6 +181,14 @@ def process_stock(code, finance_path, price_path, name):
         cf_total = cfo_v + cfi_v + cff_v
 
     # 指標を計算
+    # 株価を使う指標は、各数値の開示日当日または翌営業日の株価を使用する
+    def disc_price(field_name):
+        """フィールドの開示日に対応する株価を返す。"""
+        dd = field_disc_dates.get(field_name)
+        if dd:
+            return find_price_on_or_after_date(price_by_date, sorted_dates, dd)
+        return None
+
     eps = latest_finance.get('EPS')
     bps = latest_finance.get('BPS')
     np_val = latest_finance.get('NP')
@@ -170,11 +196,15 @@ def process_stock(code, finance_path, price_path, name):
 
     per = None
     if eps and eps != 0:
-        per = round(latest_price / eps, 2)
+        p = disc_price('EPS')
+        if p:
+            per = round(p / eps, 2)
 
     pbr = None
     if bps and bps != 0:
-        pbr = round(latest_price / bps, 2)
+        p = disc_price('BPS')
+        if p:
+            pbr = round(p / bps, 2)
 
     roe = None
     if eps is not None and bps and bps != 0:
@@ -186,19 +216,25 @@ def process_stock(code, finance_path, price_path, name):
         if shares > 0:
             cfps = cfo / shares
             if cfps != 0:
-                pcfr = round(latest_price / cfps, 2)
+                p = disc_price('CFO')
+                if p:
+                    pcfr = round(p / cfps, 2)
 
     # 配当利回り
     div_yield = None
     div_ann = latest_finance.get('DivAnn')
-    if div_ann and latest_price and latest_price != 0:
-        div_yield = round(div_ann / latest_price * 100, 2)
+    if div_ann:
+        p = disc_price('DivAnn')
+        if p and p != 0:
+            div_yield = round(div_ann / p * 100, 2)
 
     # 予想配当利回り
     fdiv_yield = None
     fdiv_ann = latest_finance.get('FDivAnn')
-    if fdiv_ann and latest_price and latest_price != 0:
-        fdiv_yield = round(fdiv_ann / latest_price * 100, 2)
+    if fdiv_ann:
+        p = disc_price('FDivAnn')
+        if p and p != 0:
+            fdiv_yield = round(fdiv_ann / p * 100, 2)
 
     # ROA
     roa = None
@@ -211,13 +247,17 @@ def process_stock(code, finance_path, price_path, name):
     if eps and eps != 0 and np_val is not None:
         shares = abs(np_val / eps)
         if shares > 0:
-            market_cap = round(latest_price * shares)
+            p = disc_price('EPS')
+            if p:
+                market_cap = round(p * shares)
 
     # 予想PER (Forward PER)
     fper = None
     feps = latest_finance.get('FEPS')
     if feps and feps != 0:
-        fper = round(latest_price / feps, 2)
+        p = disc_price('FEPS')
+        if p:
+            fper = round(p / feps, 2)
 
     # PSR (株価売上高倍率)
     sales = latest_finance.get('Sales')
@@ -248,8 +288,8 @@ def process_stock(code, finance_path, price_path, name):
         entry_bps = to_float(row.get('BPS'))
         entry_cfo = to_float(row.get('CFO'))
 
-        # その日の株価を取得
-        price_at = find_price_on_date(price_by_date, sorted_dates, date)
+        # 開示日当日または翌営業日の株価を取得
+        price_at = find_price_on_or_after_date(price_by_date, sorted_dates, date)
 
         # 各指標を計算
         entry_per = None
