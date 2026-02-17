@@ -222,6 +222,7 @@ const COLS = [
   {key:'CFO',     label:'営業CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
   {key:'CFI',     label:'投資CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
   {key:'CFF',     label:'財務CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CFTotal', label:'キャッシュフロー',         sortable:true,  chart:true,  color:'#283593', unit:'円', type:'bignum'},
   {key:'CashEq',  label:'現金同等物',              sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
   {key:'DivAnn',  label:'配当実績',                sortable:true,  chart:true,  color:'#c62828', unit:'円', type:'decimal'},
   {key:'FDivAnn', label:'配当予想',                sortable:true,  chart:true,  color:'#c62828', unit:'円', type:'decimal'},
@@ -254,7 +255,7 @@ const FH = {
   NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9, BPS:10, CFO:11, CashEq:12, MarketCap:13, CurFYEn:14,
   TA:15, Eq:16, EqAR:17, CFI:18, CFF:19, DivAnn:20, DEPS:21, roa:22, DivYield:23, fper:24, psr:25, ev_ebitda:26,
   FDivAnn:27, FPayoutRatioAnn:28, FSales:29, FOP:30, FOdP:31, FNP:32, FEPS:33,
-  NxFSales:34, NxFOP:35, NxFOdP:36, NxFNp:37, NxFEPS:38, FDivYield:39,
+  NxFSales:34, NxFOP:35, NxFOdP:36, NxFNp:37, NxFEPS:38, FDivYield:39, CFTotal:40,
 };
 
 let allStocks = [];   // 全データ
@@ -476,7 +477,7 @@ function showChart(stock, colKey) {
     const result = computeQuarterlyData(stock, colKey);
     labels = result.labels;
     values = result.values;
-    if (['NP','Sales','OP','OdP'].includes(colKey)) unit = '百万円';
+    if (['NP','Sales','OP','OdP'].includes(colKey)) unit = '億円';
   } else if (colKey === 'price') {
     title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.label;
     // 月次株価データ
@@ -494,11 +495,11 @@ function showChart(stock, colKey) {
     const filtered = fh.filter(row => row[idx] != null);
     labels = filtered.map(row => row[0]);
 
-    const bignumKeys = ['NP','Sales','OP','OdP','TA','Eq','CFI','CFF','CashEq','CFO','MarketCap',
+    const bignumKeys = ['NP','Sales','OP','OdP','TA','Eq','CFI','CFF','CFTotal','CashEq','CFO','MarketCap',
                         'FSales','FOP','FOdP','FNP','NxFSales','NxFOP','NxFOdP','NxFNp'];
     if (bignumKeys.includes(colKey)) {
-      values = filtered.map(row => Math.round(row[idx] / 1000000));
-      unit = '百万円';
+      values = filtered.map(row => Math.round(row[idx] / 10000000) / 10);
+      unit = '億円';
     } else if (colDef.type === 'percent') {
       // EqAR, FPayoutRatioAnn等: fhには生の値（0-1の比率）→%に変換
       values = filtered.map(row => Math.round(row[idx] * 10000) / 100);
@@ -625,11 +626,11 @@ function computeQuarterlyData(stock, colKey) {
 
       labels.push(startYear + 'Q' + qNum);
 
-      // 百万円単位に変換（EPS以外）
+      // 億円単位に変換（EPS以外）
       if (colKey === 'EPS') {
         values.push(Math.round(qValue * 100) / 100);
       } else {
-        values.push(Math.round(qValue / 1000000));
+        values.push(Math.round(qValue / 10000000) / 10);
       }
     }
   }
@@ -683,9 +684,8 @@ function formatBigNum(n) {
 }
 
 function formatCompact(n) {
-  if (Math.abs(n) >= 1e9) return (n / 1e9).toFixed(1) + 'B';
-  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  if (Math.abs(n) >= 1e8) return (n / 1e8).toFixed(1) + '億';
+  if (Math.abs(n) >= 1e4) return (n / 1e4).toFixed(1) + '万';
   return n.toLocaleString('ja-JP');
 }
 

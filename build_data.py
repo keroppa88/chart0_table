@@ -154,6 +154,14 @@ def process_stock(code, finance_path, price_path, name):
         if field not in latest_finance:
             latest_finance[field] = None
 
+    # キャッシュフロー合計（営業CF + 投資CF + 財務CF）
+    cf_total = None
+    cfo_v = latest_finance.get('CFO')
+    cfi_v = latest_finance.get('CFI')
+    cff_v = latest_finance.get('CFF')
+    if cfo_v is not None and cfi_v is not None and cff_v is not None:
+        cf_total = cfo_v + cfi_v + cff_v
+
     # 指標を計算
     eps = latest_finance.get('EPS')
     bps = latest_finance.get('BPS')
@@ -329,10 +337,15 @@ def process_stock(code, finance_path, price_path, name):
         if entry_fdiv_ann and price_at and price_at != 0:
             entry_fdiv_yield = round(entry_fdiv_ann / price_at * 100, 2)
 
+        # キャッシュフロー合計
+        entry_cf_total = None
+        if entry_cfo is not None and entry_cfi is not None and entry_cff is not None:
+            entry_cf_total = entry_cfo + entry_cfi + entry_cff
+
         # [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap, CurFYEn,
         #  TA, Eq, EqAR, CFI, CFF, DivAnn, DEPS, roa, DivYield, fper, psr, ev_ebitda,
         #  FDivAnn, FPayoutRatioAnn, FSales, FOP, FOdP, FNP, FEPS,
-        #  NxFSales, NxFOP, NxFOdP, NxFNp, NxFEPS, FDivYield]
+        #  NxFSales, NxFOP, NxFOdP, NxFNp, NxFEPS, FDivYield, CFTotal]
         finance_history.append([
             date,           # 0
             entry_np,       # 1
@@ -374,6 +387,7 @@ def process_stock(code, finance_path, price_path, name):
             entry_nxfnp,    # 37
             entry_nxfeps,   # 38
             entry_fdiv_yield, # 39
+            entry_cf_total, # 40
         ])
 
     # 月次株価データ（チャート用）
@@ -405,6 +419,7 @@ def process_stock(code, finance_path, price_path, name):
     result['fper'] = fper
     result['psr'] = psr
     result['ev_ebitda'] = ev_ebitda
+    result['CFTotal'] = cf_total
 
     # 履歴データ
     result['ph'] = monthly_prices       # [[date, close], ...]
