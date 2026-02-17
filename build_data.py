@@ -16,10 +16,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 FINANCE_DIR = os.path.join(BASE_DIR, 'financedata')
 OUTPUT_FILE = os.path.join(BASE_DIR, 'stock_data.json')
-CHARTLIST_FILES = [
-    os.path.join(BASE_DIR, 'allchart.csv'),
-    os.path.join(BASE_DIR, 'allchartlist.csv'),
-]
+CHARTLIST_FILE = os.path.join(BASE_DIR, 'allchartlist.csv')
 
 # financedataの全数値フィールド
 FINANCE_NUM_FIELDS = [
@@ -36,13 +33,12 @@ FINANCE_STR_FIELDS = ['CurFYEn', 'DiscDate', 'NxtFYEn']
 
 
 def load_chartlist():
-    """allchart.csv（互換で allchartlist.csv）からコード→銘柄名のマッピングを読み込む。"""
+    """allchartlist.csv からコード→銘柄名のマッピングを読み込む。"""
     mapping = {}
-    filepath = next((f for f in CHARTLIST_FILES if os.path.exists(f)), None)
-    if not filepath:
-        print(f"  警告: {', '.join(CHARTLIST_FILES)} が見つかりません")
+    if not os.path.exists(CHARTLIST_FILE):
+        print(f"  警告: {CHARTLIST_FILE} が見つかりません")
         return mapping
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(CHARTLIST_FILE, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         for row in reader:
             if len(row) >= 2:
