@@ -214,38 +214,39 @@ const COLS = [
   {key:'OdP',     label:'経常利益（当該年度・現時点）',        sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum', quarterly:true, chartLabel:'四半期経常利益（実績）'},
   {key:'NP',      label:'当期純利益（当該年度・現時点）',      sortable:true,  chart:true,  color:'#2e7d32', unit:'百万円', type:'bignum', quarterly:true, chartLabel:'四半期当期純利益（実績）'},
   {key:'EPS',     label:'一株当たり当期純利益（当該年度・現時点）', sortable:true, chart:true, color:'#6a1b9a', unit:'円', type:'decimal', quarterly:true, chartLabel:'四半期一株当たり当期純利益（実績）'},
-  {key:'DEPS',    label:'潜在株式調整後EPS',        sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
-  {key:'TA',      label:'総資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
-  {key:'Eq',      label:'純資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
-  {key:'EqAR',    label:'自己資本比率',             sortable:true,  chart:false, color:'#00838f', unit:'%', type:'percent'},
+  {key:'DEPS',    label:'潜在株式調整後EPS',        sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'TA',      label:'総資産',                  sortable:true,  chart:true,  color:'#e65100', unit:'円', type:'bignum'},
+  {key:'Eq',      label:'純資産',                  sortable:true,  chart:true,  color:'#e65100', unit:'円', type:'bignum'},
+  {key:'EqAR',    label:'自己資本比率',             sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'percent'},
   {key:'BPS',     label:'一株あたり純資産',         sortable:true,  chart:true,  color:'#e65100', unit:'円', type:'decimal'},
   {key:'CFO',     label:'営業CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
-  {key:'CFI',     label:'投資CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
-  {key:'CFF',     label:'財務CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CFI',     label:'投資CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CFF',     label:'財務CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CF',      label:'キャッシュフロー',          sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
   {key:'CashEq',  label:'現金同等物',              sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
-  {key:'DivAnn',  label:'配当実績',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
-  {key:'FDivAnn', label:'配当予想',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
-  {key:'FPayoutRatioAnn', label:'予想配当性向',     sortable:true,  chart:false, color:'#c62828', unit:'%', type:'percent'},
-  {key:'FSales',  label:'売上高予想',              sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
-  {key:'FOP',     label:'営業利益予想',            sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'FOdP',    label:'経常利益予想',            sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'FNP',     label:'純利益予想',              sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'FEPS',    label:'EPS予想',                 sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
-  {key:'NxFSales',label:'売上高予想(翌)',           sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
-  {key:'NxFOP',   label:'営業利益予想(翌)',         sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'NxFOdP',  label:'経常利益予想(翌)',         sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'NxFNp',   label:'純利益予想(翌)',           sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
-  {key:'DivYield',label:'配当利回り',               sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
-  {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
+  {key:'DivAnn',  label:'配当実績',                sortable:true,  chart:true,  color:'#c62828', unit:'円', type:'decimal'},
+  {key:'FDivAnn', label:'配当予想',                sortable:true,  chart:true,  color:'#c62828', unit:'円', type:'decimal'},
+  {key:'FPayoutRatioAnn', label:'予想配当性向',     sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'percent'},
+  {key:'FSales',  label:'売上高予想',              sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'FOP',     label:'営業利益予想',            sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FOdP',    label:'経常利益予想',            sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FNP',     label:'純利益予想',              sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FEPS',    label:'EPS予想',                 sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'NxFSales',label:'売上高予想(翌)',           sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'NxFOP',   label:'営業利益予想(翌)',         sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFOdP',  label:'経常利益予想(翌)',         sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFNp',   label:'純利益予想(翌)',           sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'DivYield',label:'配当利回り',               sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal'},
+  {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal'},
   {key:'MarketCap',label:'時価総額',               sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
   {key:'per',     label:'PER',                    sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
-  {key:'fper',    label:'予想PER',                 sortable:true,  chart:false, color:'#6a1b9a', unit:'倍', type:'decimal'},
+  {key:'fper',    label:'予想PER',                 sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
   {key:'pbr',     label:'PBR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
-  {key:'psr',     label:'PSR',                    sortable:true,  chart:false, color:'#e65100', unit:'倍', type:'decimal'},
+  {key:'psr',     label:'PSR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
   {key:'roe',     label:'ROE',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
-  {key:'roa',     label:'ROA',                    sortable:true,  chart:false, color:'#00838f', unit:'%', type:'decimal'},
-  {key:'ev_ebitda',label:'EV/EBITDA',              sortable:true,  chart:false, color:'#4527a0', unit:'倍', type:'decimal'},
+  {key:'roa',     label:'ROA',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
+  {key:'ev_ebitda',label:'EV/EBITDA',              sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
   {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
 ];
 
@@ -276,6 +277,12 @@ async function init() {
   }
 
   viewStocks = allStocks.slice();
+  allStocks.forEach(s => {
+    const cfo = s.CFO ?? 0;
+    const cfi = s.CFI ?? 0;
+    const cff = s.CFF ?? 0;
+    s.CF = cfo + cfi + cff;
+  });
   sortBy('code', true);
 
   document.getElementById('loading').style.display = 'none';
@@ -483,18 +490,32 @@ function showChart(stock, colKey) {
     // 財務データ履歴
     const fh = stock.fh || [];
     const idx = FH[colKey];
-    if (idx == null) return;
-
-    // nullでないデータのみ
-    const filtered = fh.filter(row => row[idx] != null);
-    labels = filtered.map(row => row[0]);
-
-    if (['NP','Sales','OP','OdP'].includes(colKey)) {
-      values = filtered.map(row => Math.round(row[idx] / 1000000));
-      unit = '百万円';
+    if (idx == null) {
+      const currentVal = stock[colKey];
+      const currentLabel = stock.CurFYEn || stock.DiscDate || '最新';
+      labels = [currentLabel];
+      values = currentVal != null ? [currentVal] : [];
     } else {
-      values = filtered.map(row => row[idx]);
+      // nullでないデータのみ
+      const filtered = fh.filter(row => row[idx] != null);
+      labels = filtered.map(row => row[0]);
+
+      if (['NP','Sales','OP','OdP'].includes(colKey)) {
+        values = filtered.map(row => row[idx]);
+      } else {
+        values = filtered.map(row => row[idx]);
+      }
     }
+  }
+
+  const filteredRange = filterSinceFY2022(labels, values);
+  labels = filteredRange.labels;
+  values = filteredRange.values;
+
+  const moneyScale = getMoneyScale(colDef, values);
+  if (moneyScale) {
+    values = values.map(v => v / moneyScale.divisor);
+    unit = moneyScale.unit;
   }
 
   if (!labels.length) {
@@ -618,7 +639,7 @@ function computeQuarterlyData(stock, colKey) {
       if (colKey === 'EPS') {
         values.push(Math.round(qValue * 100) / 100);
       } else {
-        values.push(Math.round(qValue / 1000000));
+        values.push(qValue);
       }
     }
   }
@@ -676,6 +697,41 @@ function formatCompact(n) {
   if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1) + 'M';
   if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1) + 'K';
   return n.toLocaleString('ja-JP');
+}
+
+function getMoneyScale(colDef, values) {
+  if (colDef.type !== 'bignum') return null;
+  if (!values.length) return {unit: '百万円', divisor: 1000000};
+  const maxAbs = Math.max(...values.map(v => Math.abs(v)));
+  if (maxAbs >= 10000000000) {
+    return {unit: '億円', divisor: 100000000};
+  }
+  return {unit: '百万円', divisor: 1000000};
+}
+
+function filterSinceFY2022(labels, values) {
+  const result = {labels: [], values: []};
+  for (let i = 0; i < labels.length; i++) {
+    const fiscalYear = inferFiscalYear(labels[i]);
+    if (fiscalYear >= 2022) {
+      result.labels.push(labels[i]);
+      result.values.push(values[i]);
+    }
+  }
+  return result;
+}
+
+function inferFiscalYear(label) {
+  if (!label) return 0;
+  const qMatch = String(label).match(/^(\d{4})Q[1-4]$/);
+  if (qMatch) return parseInt(qMatch[1], 10);
+
+  const dMatch = String(label).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!dMatch) return 0;
+
+  const year = parseInt(dMatch[1], 10);
+  const month = parseInt(dMatch[2], 10);
+  return month <= 3 ? year - 1 : year;
 }
 
 function hexToRGBA(hex, alpha) {
