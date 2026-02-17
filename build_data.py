@@ -209,6 +209,27 @@ def process_stock(code, finance_path, price_path, name):
         if shares > 0:
             market_cap = round(latest_price * shares)
 
+    # 予想PER (Forward PER)
+    fper = None
+    feps = latest_finance.get('FEPS')
+    if feps and feps != 0:
+        fper = round(latest_price / feps, 2)
+
+    # PSR (株価売上高倍率)
+    sales = latest_finance.get('Sales')
+    psr = None
+    if market_cap and sales and sales != 0:
+        psr = round(market_cap / sales, 2)
+
+    # EV/EBITDA
+    cash_eq = latest_finance.get('CashEq')
+    op_val = latest_finance.get('OP')
+    ev_ebitda = None
+    if market_cap and op_val and op_val != 0:
+        ev = market_cap - (cash_eq or 0)
+        if ev > 0:
+            ev_ebitda = round(ev / op_val, 2)
+
     # --- 過去データの構築 ---
 
     # 財務データの履歴（各開示日ごと）
@@ -293,6 +314,9 @@ def process_stock(code, finance_path, price_path, name):
     result['FDivYield'] = fdiv_yield
     result['roa'] = roa
     result['MarketCap'] = market_cap
+    result['fper'] = fper
+    result['psr'] = psr
+    result['ev_ebitda'] = ev_ebitda
 
     # 履歴データ
     result['ph'] = monthly_prices       # [[date, close], ...]
