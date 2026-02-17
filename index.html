@@ -214,43 +214,48 @@ const COLS = [
   {key:'OdP',     label:'経常利益（当該年度・現時点）',        sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum', quarterly:true, chartLabel:'四半期経常利益（実績）'},
   {key:'NP',      label:'当期純利益（当該年度・現時点）',      sortable:true,  chart:true,  color:'#2e7d32', unit:'百万円', type:'bignum', quarterly:true, chartLabel:'四半期当期純利益（実績）'},
   {key:'EPS',     label:'一株当たり当期純利益（当該年度・現時点）', sortable:true, chart:true, color:'#6a1b9a', unit:'円', type:'decimal', quarterly:true, chartLabel:'四半期一株当たり当期純利益（実績）'},
-  {key:'DEPS',    label:'潜在株式調整後EPS',        sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
-  {key:'TA',      label:'総資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
-  {key:'Eq',      label:'純資産',                  sortable:true,  chart:false, color:'#e65100', unit:'円', type:'bignum'},
-  {key:'EqAR',    label:'自己資本比率',             sortable:true,  chart:false, color:'#00838f', unit:'%', type:'percent'},
+  {key:'DEPS',    label:'潜在株式調整後EPS',        sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'TA',      label:'総資産',                  sortable:true,  chart:true,  color:'#e65100', unit:'円', type:'bignum'},
+  {key:'Eq',      label:'純資産',                  sortable:true,  chart:true,  color:'#e65100', unit:'円', type:'bignum'},
+  {key:'EqAR',    label:'自己資本比率',             sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'percent'},
   {key:'BPS',     label:'一株あたり純資産',         sortable:true,  chart:true,  color:'#e65100', unit:'円', type:'decimal'},
   {key:'CFO',     label:'営業CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
-  {key:'CFI',     label:'投資CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
-  {key:'CFF',     label:'財務CF',                  sortable:true,  chart:false, color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CFI',     label:'投資CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
+  {key:'CFF',     label:'財務CF',                  sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
   {key:'CashEq',  label:'現金同等物',              sortable:true,  chart:true,  color:'#4527a0', unit:'円', type:'bignum'},
-  {key:'DivAnn',  label:'配当実績',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
-  {key:'FDivAnn', label:'配当予想',                sortable:true,  chart:false, color:'#c62828', unit:'円', type:'decimal'},
-  {key:'FPayoutRatioAnn', label:'予想配当性向',     sortable:true,  chart:false, color:'#c62828', unit:'%', type:'percent'},
-  {key:'FSales',  label:'売上高予想',              sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
-  {key:'FOP',     label:'営業利益予想',            sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'FOdP',    label:'経常利益予想',            sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'FNP',     label:'純利益予想',              sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'FEPS',    label:'EPS予想',                 sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
-  {key:'NxFSales',label:'売上高予想(翌)',           sortable:true,  chart:false, color:'#1565c0', unit:'円', type:'bignum'},
-  {key:'NxFOP',   label:'営業利益予想(翌)',         sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'NxFOdP',  label:'経常利益予想(翌)',         sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'NxFNp',   label:'純利益予想(翌)',           sortable:true,  chart:false, color:'#2e7d32', unit:'円', type:'bignum'},
-  {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:false, color:'#6a1b9a', unit:'円', type:'decimal'},
-  {key:'DivYield',label:'配当利回り',               sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
-  {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:false, color:'#c62828', unit:'%', type:'decimal'},
+  {key:'DivAnn',  label:'配当実績',                sortable:true,  chart:true,  color:'#c62828', unit:'円', type:'decimal'},
+  {key:'FDivAnn', label:'配当予想',                sortable:true,  chart:true,  color:'#c62828', unit:'円', type:'decimal'},
+  {key:'FPayoutRatioAnn', label:'予想配当性向',     sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'percent'},
+  {key:'FSales',  label:'売上高予想',              sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'FOP',     label:'営業利益予想',            sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FOdP',    label:'経常利益予想',            sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FNP',     label:'純利益予想',              sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'FEPS',    label:'EPS予想',                 sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'NxFSales',label:'売上高予想(翌)',           sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
+  {key:'NxFOP',   label:'営業利益予想(翌)',         sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFOdP',  label:'経常利益予想(翌)',         sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFNp',   label:'純利益予想(翌)',           sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
+  {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
+  {key:'DivYield',label:'配当利回り',               sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal'},
+  {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal'},
   {key:'MarketCap',label:'時価総額',               sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
   {key:'per',     label:'PER',                    sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
-  {key:'fper',    label:'予想PER',                 sortable:true,  chart:false, color:'#6a1b9a', unit:'倍', type:'decimal'},
+  {key:'fper',    label:'予想PER',                 sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
   {key:'pbr',     label:'PBR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
-  {key:'psr',     label:'PSR',                    sortable:true,  chart:false, color:'#e65100', unit:'倍', type:'decimal'},
+  {key:'psr',     label:'PSR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
   {key:'roe',     label:'ROE',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
-  {key:'roa',     label:'ROA',                    sortable:true,  chart:false, color:'#00838f', unit:'%', type:'decimal'},
-  {key:'ev_ebitda',label:'EV/EBITDA',              sortable:true,  chart:false, color:'#4527a0', unit:'倍', type:'decimal'},
+  {key:'roa',     label:'ROA',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
+  {key:'ev_ebitda',label:'EV/EBITDA',              sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
   {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
 ];
 
-// financeHistory index mapping: [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap, CurFYEn]
-const FH = {NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9, BPS:10, CFO:11, CashEq:12, MarketCap:13, CurFYEn:14};
+// financeHistory index mapping
+const FH = {
+  NP:1, per:2, pbr:3, roe:4, pcfr:5, Sales:6, OP:7, OdP:8, EPS:9, BPS:10, CFO:11, CashEq:12, MarketCap:13, CurFYEn:14,
+  TA:15, Eq:16, EqAR:17, CFI:18, CFF:19, DivAnn:20, DEPS:21, roa:22, DivYield:23, fper:24, psr:25, ev_ebitda:26,
+  FDivAnn:27, FPayoutRatioAnn:28, FSales:29, FOP:30, FOdP:31, FNP:32, FEPS:33,
+  NxFSales:34, NxFOP:35, NxFOdP:36, NxFNp:37, NxFEPS:38, FDivYield:39,
+};
 
 let allStocks = [];   // 全データ
 let viewStocks = [];  // フィルタ後
@@ -489,9 +494,15 @@ function showChart(stock, colKey) {
     const filtered = fh.filter(row => row[idx] != null);
     labels = filtered.map(row => row[0]);
 
-    if (['NP','Sales','OP','OdP'].includes(colKey)) {
+    const bignumKeys = ['NP','Sales','OP','OdP','TA','Eq','CFI','CFF','CashEq','CFO','MarketCap',
+                        'FSales','FOP','FOdP','FNP','NxFSales','NxFOP','NxFOdP','NxFNp'];
+    if (bignumKeys.includes(colKey)) {
       values = filtered.map(row => Math.round(row[idx] / 1000000));
       unit = '百万円';
+    } else if (colDef.type === 'percent') {
+      // EqAR, FPayoutRatioAnn等: fhには生の値（0-1の比率）→%に変換
+      values = filtered.map(row => Math.round(row[idx] * 10000) / 100);
+      unit = '%';
     } else {
       values = filtered.map(row => row[idx]);
     }

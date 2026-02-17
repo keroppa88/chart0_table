@@ -279,23 +279,101 @@ def process_stock(code, finance_path, price_path, name):
             if entry_shares > 0:
                 entry_market_cap = round(price_at * entry_shares)
 
-        # [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap, CurFYEn]
+        # 追加の実績フィールド
+        entry_deps = to_float(row.get('DEPS'))
+        entry_ta = to_float(row.get('TA'))
+        entry_eq = to_float(row.get('Eq'))
+        entry_eqar = to_float(row.get('EqAR'))
+        entry_cfi = to_float(row.get('CFI'))
+        entry_cff = to_float(row.get('CFF'))
+        entry_div_ann = to_float(row.get('DivAnn'))
+
+        # 追加の予想フィールド
+        entry_fdiv_ann = to_float(row.get('FDivAnn'))
+        entry_fpayout = to_float(row.get('FPayoutRatioAnn'))
+        entry_fsales = to_float(row.get('FSales'))
+        entry_fop = to_float(row.get('FOP'))
+        entry_fodp = to_float(row.get('FOdP'))
+        entry_fnp = to_float(row.get('FNP'))
+        entry_feps = to_float(row.get('FEPS'))
+        entry_nxfsales = to_float(row.get('NxFSales'))
+        entry_nxfop = to_float(row.get('NxFOP'))
+        entry_nxfodp = to_float(row.get('NxFOdP'))
+        entry_nxfnp = to_float(row.get('NxFNp'))
+        entry_nxfeps = to_float(row.get('NxFEPS'))
+
+        # 追加の計算指標
+        entry_roa = None
+        if entry_np is not None and entry_ta and entry_ta != 0:
+            entry_roa = round(entry_np / entry_ta * 100, 2)
+
+        entry_div_yield = None
+        if entry_div_ann and price_at and price_at != 0:
+            entry_div_yield = round(entry_div_ann / price_at * 100, 2)
+
+        entry_fper = None
+        if entry_feps and entry_feps != 0 and price_at:
+            entry_fper = round(price_at / entry_feps, 2)
+
+        entry_psr = None
+        if entry_market_cap and entry_sales and entry_sales != 0:
+            entry_psr = round(entry_market_cap / entry_sales, 2)
+
+        entry_ev_ebitda = None
+        if entry_market_cap and entry_op and entry_op != 0:
+            entry_ev = entry_market_cap - (entry_cashEq or 0)
+            if entry_ev > 0:
+                entry_ev_ebitda = round(entry_ev / entry_op, 2)
+
+        entry_fdiv_yield = None
+        if entry_fdiv_ann and price_at and price_at != 0:
+            entry_fdiv_yield = round(entry_fdiv_ann / price_at * 100, 2)
+
+        # [date, NP, per, pbr, roe, pcfr, Sales, OP, OdP, EPS, BPS, CFO, CashEq, MarketCap, CurFYEn,
+        #  TA, Eq, EqAR, CFI, CFF, DivAnn, DEPS, roa, DivYield, fper, psr, ev_ebitda,
+        #  FDivAnn, FPayoutRatioAnn, FSales, FOP, FOdP, FNP, FEPS,
+        #  NxFSales, NxFOP, NxFOdP, NxFNp, NxFEPS, FDivYield]
         finance_history.append([
-            date,
-            entry_np,
-            entry_per,
-            entry_pbr,
-            entry_roe,
-            entry_pcfr,
-            entry_sales,
-            entry_op,
-            entry_odp,
-            entry_eps,
-            entry_bps,
-            entry_cfo,
-            entry_cashEq,
-            entry_market_cap,
-            entry_cur_fyen,
+            date,           # 0
+            entry_np,       # 1
+            entry_per,      # 2
+            entry_pbr,      # 3
+            entry_roe,      # 4
+            entry_pcfr,     # 5
+            entry_sales,    # 6
+            entry_op,       # 7
+            entry_odp,      # 8
+            entry_eps,      # 9
+            entry_bps,      # 10
+            entry_cfo,      # 11
+            entry_cashEq,   # 12
+            entry_market_cap, # 13
+            entry_cur_fyen, # 14
+            entry_ta,       # 15
+            entry_eq,       # 16
+            entry_eqar,     # 17
+            entry_cfi,      # 18
+            entry_cff,      # 19
+            entry_div_ann,  # 20
+            entry_deps,     # 21
+            entry_roa,      # 22
+            entry_div_yield, # 23
+            entry_fper,     # 24
+            entry_psr,      # 25
+            entry_ev_ebitda, # 26
+            entry_fdiv_ann, # 27
+            entry_fpayout,  # 28
+            entry_fsales,   # 29
+            entry_fop,      # 30
+            entry_fodp,     # 31
+            entry_fnp,      # 32
+            entry_feps,     # 33
+            entry_nxfsales, # 34
+            entry_nxfop,    # 35
+            entry_nxfodp,   # 36
+            entry_nxfnp,    # 37
+            entry_nxfeps,   # 38
+            entry_fdiv_yield, # 39
         ])
 
     # 月次株価データ（チャート用）
