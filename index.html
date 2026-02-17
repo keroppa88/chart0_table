@@ -508,10 +508,6 @@ function showChart(stock, colKey) {
     }
   }
 
-  const filteredRange = filterSinceFY2022(labels, values);
-  labels = filteredRange.labels;
-  values = filteredRange.values;
-
   const moneyScale = getMoneyScale(colDef, values);
   if (moneyScale) {
     values = values.map(v => v / moneyScale.divisor);
@@ -707,31 +703,6 @@ function getMoneyScale(colDef, values) {
     return {unit: '億円', divisor: 100000000};
   }
   return {unit: '百万円', divisor: 1000000};
-}
-
-function filterSinceFY2022(labels, values) {
-  const result = {labels: [], values: []};
-  for (let i = 0; i < labels.length; i++) {
-    const fiscalYear = inferFiscalYear(labels[i]);
-    if (fiscalYear >= 2022) {
-      result.labels.push(labels[i]);
-      result.values.push(values[i]);
-    }
-  }
-  return result;
-}
-
-function inferFiscalYear(label) {
-  if (!label) return 0;
-  const qMatch = String(label).match(/^(\d{4})Q[1-4]$/);
-  if (qMatch) return parseInt(qMatch[1], 10);
-
-  const dMatch = String(label).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!dMatch) return 0;
-
-  const year = parseInt(dMatch[1], 10);
-  const month = parseInt(dMatch[2], 10);
-  return month <= 3 ? year - 1 : year;
 }
 
 function hexToRGBA(hex, alpha) {
