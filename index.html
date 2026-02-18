@@ -108,23 +108,32 @@ body{
 }
 .win.minimized .win-body{display:none}
 
-/* リサイズハンドル */
-.win-resize{
+/* リサイズハンドル（全8方向） */
+.resize-handle{
   position:absolute;
-  right:0;bottom:0;
-  width:18px;height:18px;
-  cursor:se-resize;
-  z-index:2;
+  z-index:10;
 }
-.win-resize::after{
-  content:'';
-  position:absolute;
-  right:3px;bottom:3px;
-  width:10px;height:10px;
-  border-right:2px solid rgba(0,0,0,.2);
-  border-bottom:2px solid rgba(0,0,0,.2);
+/* 上下左右辺 */
+.resize-n { top:0; left:12px; right:12px; height:5px; cursor:n-resize; }
+.resize-s { bottom:0; left:12px; right:12px; height:5px; cursor:s-resize; }
+.resize-e { right:0; top:12px; bottom:12px; width:5px; cursor:e-resize; }
+.resize-w { left:0; top:12px; bottom:12px; width:5px; cursor:w-resize; }
+/* 四隅 */
+.resize-nw { top:0; left:0; width:12px; height:12px; cursor:nw-resize; }
+.resize-ne { top:0; right:0; width:12px; height:12px; cursor:ne-resize; }
+.resize-sw { bottom:0; left:0; width:12px; height:12px; cursor:sw-resize; }
+.resize-se { bottom:0; right:0; width:12px; height:12px; cursor:se-resize; }
+/* 四隅の視覚的インジケーター */
+.resize-nw::after,.resize-ne::after,.resize-sw::after,.resize-se::after{
+  content:'';position:absolute;
+  width:7px;height:7px;
+  border-color:rgba(0,0,0,.22);border-style:solid;
 }
-.win.minimized .win-resize{display:none}
+.resize-se::after{bottom:2px;right:2px;border-width:0 2px 2px 0}
+.resize-sw::after{bottom:2px;left:2px;border-width:0 0 2px 2px}
+.resize-ne::after{top:2px;right:2px;border-width:2px 2px 0 0}
+.resize-nw::after{top:2px;left:2px;border-width:2px 0 0 2px}
+.win.minimized .resize-handle{display:none}
 
 /* ===== テーブルパネル ===== */
 .table-panel{
@@ -379,7 +388,14 @@ td:hover{background:#bbdefb !important}
         </table>
       </div>
     </div>
-    <div class="win-resize" id="tableWinResize"></div>
+    <div class="resize-handle resize-n"  data-dir="n"></div>
+    <div class="resize-handle resize-s"  data-dir="s"></div>
+    <div class="resize-handle resize-e"  data-dir="e"></div>
+    <div class="resize-handle resize-w"  data-dir="w"></div>
+    <div class="resize-handle resize-nw" data-dir="nw"></div>
+    <div class="resize-handle resize-ne" data-dir="ne"></div>
+    <div class="resize-handle resize-sw" data-dir="sw"></div>
+    <div class="resize-handle resize-se" data-dir="se"></div>
   </div>
 
   <!-- グラフウィンドウ -->
@@ -450,7 +466,14 @@ td:hover{background:#bbdefb !important}
 
       </div><!-- /graph-panel -->
     </div><!-- /win-body -->
-    <div class="win-resize" id="graphWinResize"></div>
+    <div class="resize-handle resize-n"  data-dir="n"></div>
+    <div class="resize-handle resize-s"  data-dir="s"></div>
+    <div class="resize-handle resize-e"  data-dir="e"></div>
+    <div class="resize-handle resize-w"  data-dir="w"></div>
+    <div class="resize-handle resize-nw" data-dir="nw"></div>
+    <div class="resize-handle resize-ne" data-dir="ne"></div>
+    <div class="resize-handle resize-sw" data-dir="sw"></div>
+    <div class="resize-handle resize-se" data-dir="se"></div>
   </div><!-- /graphWin -->
 
 </div><!-- /win-container -->
@@ -579,6 +602,11 @@ async function init() {
     if (e.target === document.getElementById('winContainer')) deselectSlot();
   });
 
+  // ヘッダーの何もない場所クリックでグラフスロット選択解除
+  document.querySelector('.header').addEventListener('click', e => {
+    if (!e.target.closest('input, button, a, select')) deselectSlot();
+  });
+
   // グローバルマウスイベント（ドラッグ・リサイズ）
   document.addEventListener('mousemove', e => {
     if (activeDrag) {
@@ -590,8 +618,28 @@ async function init() {
     if (activeResize) {
       const dx = e.clientX - activeResize.startX;
       const dy = e.clientY - activeResize.startY;
-      activeResize.win.style.width  = Math.max(220, activeResize.startW + dx) + 'px';
-      activeResize.win.style.height = Math.max(60,  activeResize.startH + dy) + 'px';
+      const dir = activeResize.dir;
+      const w = activeResize.win;
+      // 右辺・右角
+      if (dir.includes('e')) {
+        w.style.width = Math.max(220, activeResize.startW + dx) + 'px';
+      }
+      // 下辺・下角
+      if (dir.includes('s')) {
+        w.style.height = Math.max(60, activeResize.startH + dy) + 'px';
+      }
+      // 左辺・左角（位置も同時調整）
+      if (dir.includes('w')) {
+        const newW = Math.max(220, activeResize.startW - dx);
+        w.style.width = newW + 'px';
+        w.style.left = (activeResize.startLeft + activeResize.startW - newW) + 'px';
+      }
+      // 上辺・上角（位置も同時調整）
+      if (dir.includes('n')) {
+        const newH = Math.max(60, activeResize.startH - dy);
+        w.style.height = newH + 'px';
+        w.style.top = (activeResize.startTop + activeResize.startH - newH) + 'px';
+      }
     }
   });
 
@@ -631,7 +679,6 @@ function initWindows() {
 function initWin(id) {
   const win = document.getElementById(id);
   const titlebar = win.querySelector('.win-titlebar');
-  const resizeHandle = win.querySelector('.win-resize');
 
   // クリックで前面へ
   win.addEventListener('mousedown', () => {
@@ -652,18 +699,23 @@ function initWin(id) {
     win.style.zIndex = ++zTop;
   });
 
-  // リサイズハンドル
-  resizeHandle.addEventListener('mousedown', e => {
-    e.preventDefault();
-    e.stopPropagation();
-    activeResize = {
-      win,
-      startX: e.clientX,
-      startY: e.clientY,
-      startW: win.offsetWidth,
-      startH: win.offsetHeight,
-    };
-    win.style.zIndex = ++zTop;
+  // 全方向リサイズハンドル
+  win.querySelectorAll('.resize-handle').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      activeResize = {
+        win,
+        dir: handle.dataset.dir,
+        startX: e.clientX,
+        startY: e.clientY,
+        startW: win.offsetWidth,
+        startH: win.offsetHeight,
+        startLeft: parseInt(win.style.left) || 0,
+        startTop:  parseInt(win.style.top)  || 0,
+      };
+      win.style.zIndex = ++zTop;
+    });
   });
 }
 
