@@ -613,7 +613,7 @@ async function init() {
       const dx = e.clientX - activeDrag.startX;
       const dy = e.clientY - activeDrag.startY;
       activeDrag.win.style.left = (activeDrag.startLeft + dx) + 'px';
-      activeDrag.win.style.top  = (activeDrag.startTop  + dy) + 'px';
+      activeDrag.win.style.top  = Math.max(0, activeDrag.startTop  + dy) + 'px';
     }
     if (activeResize) {
       const dx = e.clientX - activeResize.startX;
@@ -636,9 +636,14 @@ async function init() {
       }
       // 上辺・上角（位置も同時調整）
       if (dir.includes('n')) {
-        const newH = Math.max(60, activeResize.startH - dy);
+        let newH = Math.max(60, activeResize.startH - dy);
+        let newTop = activeResize.startTop + activeResize.startH - newH;
+        if (newTop < 0) {
+          newH = Math.max(60, newH + newTop);
+          newTop = 0;
+        }
         w.style.height = newH + 'px';
-        w.style.top = (activeResize.startTop + activeResize.startH - newH) + 'px';
+        w.style.top = newTop + 'px';
       }
     }
   });
