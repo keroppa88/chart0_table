@@ -1,4 +1,9 @@
+# 大きいデータファイルを除外
 data/
 financedata/
+# ただしこれは読む
 !data/4062.csv
 !data/9984.csv
+!financedata/7203.csv
+!financedata/4062.csv
+!financedata/9984.csv
