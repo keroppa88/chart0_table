@@ -354,8 +354,8 @@ td:hover{background:#bbdefb !important}
   <div class="header-left">
     <h1>日本株データダッシュボード</h1>
     <input type="text" class="search-box" id="searchBox" placeholder="コード・銘柄検索...">
+    <span class="count" id="stockCount"></span>
   </div>
-  <span class="count" id="stockCount"></span>
 </div>
 
 <div class="loading" id="loading">
@@ -463,7 +463,7 @@ const COLS = [
   {key:'rank',    label:'#',                      sortable:false, chart:false, type:'rank'},
   {key:'code',    label:'銘柄コード',              sortable:true,  chart:false, type:'code'},
   {key:'name',    label:'銘柄名',                  sortable:true,  chart:false, type:'name'},
-  {key:'price',   label:'株価',                    sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'price'},
+  {key:'price',   label:'株価',                    sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'price',    lineChart:true},
   {key:'CurFYEn', label:'当事業年度終了日',         sortable:true,  chart:false, type:'date'},
   {key:'DiscDate',label:'開示日',                  sortable:true,  chart:false, type:'date'},
   {key:'NxtFYEn', label:'翌事業年度終了日',         sortable:true,  chart:false, type:'date'},
@@ -495,17 +495,17 @@ const COLS = [
   {key:'NxFOdP',  label:'経常利益予想(翌)',         sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
   {key:'NxFNp',   label:'純利益予想(翌)',           sortable:true,  chart:true,  color:'#2e7d32', unit:'円', type:'bignum'},
   {key:'NxFEPS',  label:'EPS予想(翌)',             sortable:true,  chart:true,  color:'#6a1b9a', unit:'円', type:'decimal'},
-  {key:'DivYield',label:'配当利回り',               sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal'},
-  {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal'},
-  {key:'MarketCap',label:'時価総額',               sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum'},
-  {key:'per',     label:'PER',                    sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
-  {key:'fper',    label:'予想PER',                 sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal'},
-  {key:'pbr',     label:'PBR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
-  {key:'psr',     label:'PSR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal'},
+  {key:'DivYield',label:'配当利回り',               sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal',  lineChart:true},
+  {key:'FDivYield',label:'予想配当利回り',          sortable:true,  chart:true,  color:'#c62828', unit:'%', type:'decimal',  lineChart:true},
+  {key:'MarketCap',label:'時価総額',               sortable:true,  chart:true,  color:'#1565c0', unit:'円', type:'bignum',   lineChart:true},
+  {key:'per',     label:'PER',                    sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal',  lineChart:true},
+  {key:'fper',    label:'予想PER',                 sortable:true,  chart:true,  color:'#6a1b9a', unit:'倍', type:'decimal',  lineChart:true},
+  {key:'pbr',     label:'PBR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal',  lineChart:true},
+  {key:'psr',     label:'PSR',                    sortable:true,  chart:true,  color:'#e65100', unit:'倍', type:'decimal',  lineChart:true},
   {key:'roe',     label:'ROE',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
   {key:'roa',     label:'ROA',                    sortable:true,  chart:true,  color:'#00838f', unit:'%', type:'decimal'},
-  {key:'ev_ebitda',label:'EV/EBITDA',              sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
-  {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal'},
+  {key:'ev_ebitda',label:'EV/EBITDA',              sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal',  lineChart:true},
+  {key:'pcfr',    label:'PCFR',                   sortable:true,  chart:true,  color:'#4527a0', unit:'倍', type:'decimal',  lineChart:true},
 ];
 
 // financeHistory index mapping
@@ -572,6 +572,11 @@ async function init() {
       case 'ArrowDown':  wrap.scrollTop  += scrollStep; e.preventDefault(); break;
       case 'ArrowUp':    wrap.scrollTop  -= scrollStep; e.preventDefault(); break;
     }
+  });
+
+  // winContainer の背景クリックでグラフスロット選択解除
+  document.getElementById('winContainer').addEventListener('click', e => {
+    if (e.target === document.getElementById('winContainer')) deselectSlot();
   });
 
   // グローバルマウスイベント（ドラッグ・リサイズ）
@@ -704,10 +709,27 @@ function selectSlot(slotIdx) {
   }
 }
 
+function deselectSlot() {
+  selectedSlot = -1;
+  for (let i = 0; i < 3; i++) {
+    const slot = document.getElementById('slot' + i);
+    const hint = document.getElementById('slotHint' + i);
+    const empty = document.getElementById('slotEmpty' + i);
+    slot.classList.remove('selected');
+    hint.textContent = 'クリックして選択';
+    if (!chartInstances[i]) {
+      empty.innerHTML = '<div class="slot-empty-icon">&#9646;</div>クリックして選択';
+    }
+  }
+}
+
 /* ============================================================
    グラフスロットに表示
    ============================================================ */
 function showChartInSlot(stock, colKey) {
+  // スロット未選択時はスロット0を自動選択
+  if (selectedSlot === -1) selectSlot(0);
+
   // chart:false 列は price にフォールバック
   const colDef = COLS.find(c => c.key === colKey && c.chart) || COLS.find(c => c.key === 'price');
   if (!colDef) return;
@@ -766,61 +788,85 @@ function showChartInSlot(stock, colKey) {
   const canvasWrap = document.getElementById('slotCanvasWrap' + slotIdx);
   canvasWrap.classList.add('visible');
 
-  // チャート色
-  const bgColors = values.map(v =>
-    v < 0 ? 'rgba(211,47,47,0.7)' : hexToRGBA(colDef.color, 0.7)
-  );
-  const borderColors = values.map(v =>
-    v < 0 ? 'rgba(211,47,47,1)' : colDef.color
-  );
-
   const canvas = document.getElementById('chartCanvas' + slotIdx);
   const ctx = canvas.getContext('2d');
-  chartInstances[slotIdx] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: colDef.chartLabel || colDef.label,
-        data: values,
-        backgroundColor: bgColors,
-        borderColor: borderColors,
-        borderWidth: 1,
-        borderRadius: 2,
-      }]
+
+  const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {display: false},
+      tooltip: {
+        callbacks: {
+          label: c => (colDef.chartLabel || colDef.label) + ': ' + formatNum(c.parsed.y) + ' ' + unit
+        }
+      }
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {display: false},
-        tooltip: {
-          callbacks: {
-            label: ctx => (colDef.chartLabel || colDef.label) + ': ' + formatNum(ctx.parsed.y) + ' ' + unit
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: {
-            maxRotation: 60,
-            autoSkip: true,
-            maxTicksLimit: 20,
-            font: {size: 9}
-          },
-          grid: {display: false}
+    scales: {
+      x: {
+        ticks: {
+          maxRotation: 60,
+          autoSkip: true,
+          maxTicksLimit: 20,
+          font: {size: 9}
         },
-        y: {
-          ticks: {
-            callback: v => formatCompact(v),
-            font: {size: 10}
-          },
-          grid: {color: 'rgba(0,0,0,.06)'}
-        }
+        grid: {display: false}
       },
-      animation: {duration: 300}
-    }
-  });
+      y: {
+        ticks: {
+          callback: v => formatCompact(v),
+          font: {size: 10}
+        },
+        grid: {color: 'rgba(0,0,0,.06)'}
+      }
+    },
+    animation: {duration: 300}
+  };
+
+  if (colDef.lineChart) {
+    // 折れ線グラフ（株価・PER・PBR等 株価を使う指標）
+    chartInstances[slotIdx] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: colDef.chartLabel || colDef.label,
+          data: values,
+          borderColor: colDef.color,
+          backgroundColor: hexToRGBA(colDef.color, 0.08),
+          borderWidth: 2,
+          pointRadius: 2,
+          pointHoverRadius: 4,
+          fill: true,
+          tension: 0.1,
+        }]
+      },
+      options: commonOptions
+    });
+  } else {
+    // 棒グラフ（売上・利益等）
+    const bgColors = values.map(v =>
+      v < 0 ? 'rgba(211,47,47,0.7)' : hexToRGBA(colDef.color, 0.7)
+    );
+    const borderColors = values.map(v =>
+      v < 0 ? 'rgba(211,47,47,1)' : colDef.color
+    );
+    chartInstances[slotIdx] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: colDef.chartLabel || colDef.label,
+          data: values,
+          backgroundColor: bgColors,
+          borderColor: borderColors,
+          borderWidth: 1,
+          borderRadius: 2,
+        }]
+      },
+      options: commonOptions
+    });
+  }
 }
 
 /* ============================================================
