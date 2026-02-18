@@ -9,7 +9,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{
   font-family:'Segoe UI','Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;
-  background:#f0f2f5;
+  background:#dde0e8;
   color:#1a1a2e;
   height:100vh;
   overflow:hidden;
@@ -19,7 +19,7 @@ body{
 .header{
   background:linear-gradient(135deg,#1a237e 0%,#283593 100%);
   color:#fff;
-  padding:14px 24px;
+  padding:0 24px;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -27,9 +27,9 @@ body{
   box-shadow:0 2px 8px rgba(0,0,0,.25);
   height:52px;
 }
-.header h1{font-size:18px;font-weight:600;letter-spacing:.5px}
-.header-right{display:flex;align-items:center;gap:16px;font-size:13px}
-.header-right .count{opacity:.85}
+.header-left{display:flex;align-items:center;gap:16px}
+.header h1{font-size:18px;font-weight:600;letter-spacing:.5px;white-space:nowrap}
+.count{font-size:13px;opacity:.85}
 .search-box{
   padding:6px 12px;
   border:none;border-radius:6px;
@@ -42,18 +42,95 @@ body{
 .search-box::placeholder{color:rgba(255,255,255,.5)}
 .search-box:focus{background:rgba(255,255,255,.25)}
 
-/* ===== メインレイアウト ===== */
-.main-layout{
-  display:flex;
+/* ===== ウィンドウコンテナ ===== */
+.win-container{
+  position:relative;
   height:calc(100vh - 52px);
   overflow:hidden;
+  background:#dde0e8;
 }
 
-/* ===== テーブルパネル (左75%) ===== */
-.table-panel{
-  width:75%;
-  overflow:auto;
+/* ===== フローティングウィンドウ ===== */
+.win{
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  border-radius:8px;
+  box-shadow:0 6px 24px rgba(0,0,0,.22),0 1px 4px rgba(0,0,0,.12);
+  background:#fff;
+  min-width:220px;
+  min-height:60px;
+  border:1px solid rgba(0,0,0,.08);
+  z-index:1;
+}
+
+.win-titlebar{
+  background:linear-gradient(90deg,#303f9f 0%,#3949ab 100%);
+  color:#fff;
+  padding:0 10px;
+  border-radius:8px 8px 0 0;
+  display:flex;
+  align-items:center;
+  cursor:move;
+  user-select:none;
+  gap:8px;
   flex-shrink:0;
+  height:34px;
+}
+.win.minimized .win-titlebar{border-radius:8px}
+
+.win-title{
+  font-size:12px;
+  font-weight:600;
+  flex:1;
+  letter-spacing:.3px;
+}
+
+.win-btn-min{
+  background:#ffc107;
+  color:#5a3e00;
+  border:none;
+  cursor:pointer;
+  width:20px;height:20px;
+  border-radius:50%;
+  font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  padding:0;
+  line-height:1;
+}
+.win-btn-min:hover{background:#ffb300}
+
+.win-body{
+  flex:1;
+  overflow:hidden;
+  min-height:0;
+}
+.win.minimized .win-body{display:none}
+
+/* リサイズハンドル */
+.win-resize{
+  position:absolute;
+  right:0;bottom:0;
+  width:18px;height:18px;
+  cursor:se-resize;
+  z-index:2;
+}
+.win-resize::after{
+  content:'';
+  position:absolute;
+  right:3px;bottom:3px;
+  width:10px;height:10px;
+  border-right:2px solid rgba(0,0,0,.2);
+  border-bottom:2px solid rgba(0,0,0,.2);
+}
+.win.minimized .win-resize{display:none}
+
+/* ===== テーブルパネル ===== */
+.table-panel{
+  width:100%;
+  height:100%;
+  overflow:auto;
   background:#f0f2f5;
 }
 
@@ -128,15 +205,14 @@ td:hover{background:#bbdefb !important}
 
 .negative{color:#d32f2f}
 
-/* ===== グラフパネル (右25%) ===== */
+/* ===== グラフパネル ===== */
 .graph-panel{
-  width:25%;
+  width:100%;
+  height:100%;
   display:flex;
   flex-direction:column;
-  border-left:2px solid #c5cae9;
   background:#eceff1;
   overflow:hidden;
-  flex-shrink:0;
 }
 
 .graph-slot{
@@ -275,11 +351,11 @@ td:hover{background:#bbdefb !important}
 <body>
 
 <div class="header">
-  <h1>日本株データダッシュボード</h1>
-  <div class="header-right">
+  <div class="header-left">
+    <h1>日本株データダッシュボード</h1>
     <input type="text" class="search-box" id="searchBox" placeholder="コード・銘柄検索...">
-    <span class="count" id="stockCount"></span>
   </div>
+  <span class="count" id="stockCount"></span>
 </div>
 
 <div class="loading" id="loading">
@@ -287,78 +363,97 @@ td:hover{background:#bbdefb !important}
   <p>データを読み込み中...</p>
 </div>
 
-<div class="main-layout" id="mainLayout" style="display:none">
+<div class="win-container" id="winContainer" style="display:none">
 
-  <!-- 左75%: テーブル -->
-  <div class="table-panel" id="tableWrap">
-    <table>
-      <thead><tr id="headRow"></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
+  <!-- テーブルウィンドウ -->
+  <div class="win" id="tableWin">
+    <div class="win-titlebar" id="tableWinBar">
+      <span class="win-title">データテーブル</span>
+      <button class="win-btn-min" onclick="toggleMinimize('tableWin')">－</button>
+    </div>
+    <div class="win-body">
+      <div class="table-panel" id="tableWrap">
+        <table>
+          <thead><tr id="headRow"></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="win-resize" id="tableWinResize"></div>
   </div>
 
-  <!-- 右25%: グラフパネル -->
-  <div class="graph-panel" id="graphPanel">
-
-    <!-- スロット 1 -->
-    <div class="graph-slot selected" id="slot0">
-      <div class="slot-header" onclick="selectSlot(0)">
-        <div class="slot-badge">1</div>
-        <span class="slot-label">グラフ1</span>
-        <span class="slot-title" id="slotTitle0">-</span>
-        <span class="slot-select-hint" id="slotHint0">選択中</span>
-      </div>
-      <div class="slot-body">
-        <div class="slot-empty" id="slotEmpty0">
-          <div class="slot-empty-icon">&#9646;</div>
-          選択中<br>表をクリックして表示
-        </div>
-        <div class="slot-canvas-wrap" id="slotCanvasWrap0">
-          <canvas id="chartCanvas0"></canvas>
-        </div>
-      </div>
+  <!-- グラフウィンドウ -->
+  <div class="win" id="graphWin">
+    <div class="win-titlebar" id="graphWinBar">
+      <span class="win-title">グラフ</span>
+      <button class="win-btn-min" onclick="toggleMinimize('graphWin')">－</button>
     </div>
+    <div class="win-body">
+      <div class="graph-panel" id="graphPanel">
 
-    <!-- スロット 2 -->
-    <div class="graph-slot" id="slot1">
-      <div class="slot-header" onclick="selectSlot(1)">
-        <div class="slot-badge">2</div>
-        <span class="slot-label">グラフ2</span>
-        <span class="slot-title" id="slotTitle1">-</span>
-        <span class="slot-select-hint" id="slotHint1">クリックして選択</span>
-      </div>
-      <div class="slot-body">
-        <div class="slot-empty" id="slotEmpty1">
-          <div class="slot-empty-icon">&#9646;</div>
-          クリックして選択
+        <!-- スロット 1 -->
+        <div class="graph-slot selected" id="slot0">
+          <div class="slot-header" onclick="selectSlot(0)">
+            <div class="slot-badge">1</div>
+            <span class="slot-label">グラフ1</span>
+            <span class="slot-title" id="slotTitle0">-</span>
+            <span class="slot-select-hint" id="slotHint0">選択中</span>
+          </div>
+          <div class="slot-body">
+            <div class="slot-empty" id="slotEmpty0">
+              <div class="slot-empty-icon">&#9646;</div>
+              選択中<br>表をクリックして表示
+            </div>
+            <div class="slot-canvas-wrap" id="slotCanvasWrap0">
+              <canvas id="chartCanvas0"></canvas>
+            </div>
+          </div>
         </div>
-        <div class="slot-canvas-wrap" id="slotCanvasWrap1">
-          <canvas id="chartCanvas1"></canvas>
-        </div>
-      </div>
-    </div>
 
-    <!-- スロット 3 -->
-    <div class="graph-slot" id="slot2">
-      <div class="slot-header" onclick="selectSlot(2)">
-        <div class="slot-badge">3</div>
-        <span class="slot-label">グラフ3</span>
-        <span class="slot-title" id="slotTitle2">-</span>
-        <span class="slot-select-hint" id="slotHint2">クリックして選択</span>
-      </div>
-      <div class="slot-body">
-        <div class="slot-empty" id="slotEmpty2">
-          <div class="slot-empty-icon">&#9646;</div>
-          クリックして選択
+        <!-- スロット 2 -->
+        <div class="graph-slot" id="slot1">
+          <div class="slot-header" onclick="selectSlot(1)">
+            <div class="slot-badge">2</div>
+            <span class="slot-label">グラフ2</span>
+            <span class="slot-title" id="slotTitle1">-</span>
+            <span class="slot-select-hint" id="slotHint1">クリックして選択</span>
+          </div>
+          <div class="slot-body">
+            <div class="slot-empty" id="slotEmpty1">
+              <div class="slot-empty-icon">&#9646;</div>
+              クリックして選択
+            </div>
+            <div class="slot-canvas-wrap" id="slotCanvasWrap1">
+              <canvas id="chartCanvas1"></canvas>
+            </div>
+          </div>
         </div>
-        <div class="slot-canvas-wrap" id="slotCanvasWrap2">
-          <canvas id="chartCanvas2"></canvas>
-        </div>
-      </div>
-    </div>
 
-  </div><!-- /graph-panel -->
-</div><!-- /main-layout -->
+        <!-- スロット 3 -->
+        <div class="graph-slot" id="slot2">
+          <div class="slot-header" onclick="selectSlot(2)">
+            <div class="slot-badge">3</div>
+            <span class="slot-label">グラフ3</span>
+            <span class="slot-title" id="slotTitle2">-</span>
+            <span class="slot-select-hint" id="slotHint2">クリックして選択</span>
+          </div>
+          <div class="slot-body">
+            <div class="slot-empty" id="slotEmpty2">
+              <div class="slot-empty-icon">&#9646;</div>
+              クリックして選択
+            </div>
+            <div class="slot-canvas-wrap" id="slotCanvasWrap2">
+              <canvas id="chartCanvas2"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /graph-panel -->
+    </div><!-- /win-body -->
+    <div class="win-resize" id="graphWinResize"></div>
+  </div><!-- /graphWin -->
+
+</div><!-- /win-container -->
 
 <script>
 /* ============================================================
@@ -431,6 +526,12 @@ let dragSrcIdx = null;
 let selectedSlot = 0;
 const chartInstances = [null, null, null];
 
+// ウィンドウ管理
+let zTop = 10;
+let activeDrag = null;
+let activeResize = null;
+const winSavedSizes = {};
+
 /* ============================================================
    初期化
    ============================================================ */
@@ -452,7 +553,9 @@ async function init() {
   sortBy('code', true);
 
   document.getElementById('loading').style.display = 'none';
-  document.getElementById('mainLayout').style.display = 'flex';
+  const container = document.getElementById('winContainer');
+  container.style.display = 'block';
+  initWindows();
   updateCount();
 
   // 検索
@@ -470,6 +573,114 @@ async function init() {
       case 'ArrowUp':    wrap.scrollTop  -= scrollStep; e.preventDefault(); break;
     }
   });
+
+  // グローバルマウスイベント（ドラッグ・リサイズ）
+  document.addEventListener('mousemove', e => {
+    if (activeDrag) {
+      const dx = e.clientX - activeDrag.startX;
+      const dy = e.clientY - activeDrag.startY;
+      activeDrag.win.style.left = (activeDrag.startLeft + dx) + 'px';
+      activeDrag.win.style.top  = (activeDrag.startTop  + dy) + 'px';
+    }
+    if (activeResize) {
+      const dx = e.clientX - activeResize.startX;
+      const dy = e.clientY - activeResize.startY;
+      activeResize.win.style.width  = Math.max(220, activeResize.startW + dx) + 'px';
+      activeResize.win.style.height = Math.max(60,  activeResize.startH + dy) + 'px';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    activeDrag = null;
+    activeResize = null;
+  });
+}
+
+/* ============================================================
+   ウィンドウ初期配置・初期化
+   ============================================================ */
+function initWindows() {
+  const container = document.getElementById('winContainer');
+  const W = container.offsetWidth;
+  const H = container.offsetHeight;
+  const gap = 8;
+  const tableW = Math.floor((W - 3 * gap) * 0.74);
+  const graphW = W - 3 * gap - tableW;
+  const winH = H - 2 * gap;
+
+  const tableWin = document.getElementById('tableWin');
+  tableWin.style.left   = gap + 'px';
+  tableWin.style.top    = gap + 'px';
+  tableWin.style.width  = tableW + 'px';
+  tableWin.style.height = winH + 'px';
+
+  const graphWin = document.getElementById('graphWin');
+  graphWin.style.left   = (gap * 2 + tableW) + 'px';
+  graphWin.style.top    = gap + 'px';
+  graphWin.style.width  = graphW + 'px';
+  graphWin.style.height = winH + 'px';
+
+  ['tableWin', 'graphWin'].forEach(initWin);
+}
+
+function initWin(id) {
+  const win = document.getElementById(id);
+  const titlebar = win.querySelector('.win-titlebar');
+  const resizeHandle = win.querySelector('.win-resize');
+
+  // クリックで前面へ
+  win.addEventListener('mousedown', () => {
+    win.style.zIndex = ++zTop;
+  });
+
+  // タイトルバードラッグ
+  titlebar.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('win-btn-min')) return;
+    e.preventDefault();
+    activeDrag = {
+      win,
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: parseInt(win.style.left) || 0,
+      startTop:  parseInt(win.style.top)  || 0,
+    };
+    win.style.zIndex = ++zTop;
+  });
+
+  // リサイズハンドル
+  resizeHandle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    activeResize = {
+      win,
+      startX: e.clientX,
+      startY: e.clientY,
+      startW: win.offsetWidth,
+      startH: win.offsetHeight,
+    };
+    win.style.zIndex = ++zTop;
+  });
+}
+
+/* ============================================================
+   最小化・復元
+   ============================================================ */
+function toggleMinimize(id) {
+  const win = document.getElementById(id);
+  const btn = win.querySelector('.win-btn-min');
+  if (win.classList.contains('minimized')) {
+    win.classList.remove('minimized');
+    if (winSavedSizes[id]) {
+      win.style.width  = winSavedSizes[id].w;
+      win.style.height = winSavedSizes[id].h;
+    }
+    btn.textContent = '－';
+  } else {
+    winSavedSizes[id] = { w: win.style.width, h: win.style.height };
+    win.classList.add('minimized');
+    win.style.height = '34px';
+    btn.textContent = '＋';
+  }
 }
 
 /* ============================================================
