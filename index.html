@@ -11,6 +11,8 @@ body{
   font-family:'Segoe UI','Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;
   background:#f0f2f5;
   color:#1a1a2e;
+  height:100vh;
+  overflow:hidden;
 }
 
 /* ===== ヘッダー ===== */
@@ -23,6 +25,7 @@ body{
   justify-content:space-between;
   position:sticky;top:0;z-index:50;
   box-shadow:0 2px 8px rgba(0,0,0,.25);
+  height:52px;
 }
 .header h1{font-size:18px;font-weight:600;letter-spacing:.5px}
 .header-right{display:flex;align-items:center;gap:16px;font-size:13px}
@@ -39,17 +42,27 @@ body{
 .search-box::placeholder{color:rgba(255,255,255,.5)}
 .search-box:focus{background:rgba(255,255,255,.25)}
 
-/* ===== テーブル ===== */
-.table-wrap{
-  overflow:auto;
-  max-height:calc(100vh - 52px);
+/* ===== メインレイアウト ===== */
+.main-layout{
+  display:flex;
+  height:calc(100vh - 52px);
+  overflow:hidden;
 }
+
+/* ===== テーブルパネル (左75%) ===== */
+.table-panel{
+  width:75%;
+  overflow:auto;
+  flex-shrink:0;
+  background:#f0f2f5;
+}
+
+/* ===== テーブル ===== */
 table{
   width:max-content;
   border-collapse:collapse;
   font-size:13px;
 }
-
 thead{position:sticky;top:0;z-index:10}
 th{
   background:#303f9f;
@@ -115,44 +128,129 @@ td:hover{background:#bbdefb !important}
 
 .negative{color:#d32f2f}
 
-/* ===== モーダル ===== */
-.overlay{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.5);
-  z-index:200;
-  justify-content:center;
-  align-items:center;
-  backdrop-filter:blur(2px);
-}
-.overlay.active{display:flex}
-
-.modal{
-  background:#fff;
-  border-radius:14px;
-  padding:24px 28px;
-  width:92vw;max-width:860px;
-  max-height:92vh;overflow:auto;
-  box-shadow:0 24px 64px rgba(0,0,0,.3);
-}
-.modal-head{
+/* ===== グラフパネル (右25%) ===== */
+.graph-panel{
+  width:25%;
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:16px;
+  flex-direction:column;
+  border-left:2px solid #c5cae9;
+  background:#eceff1;
+  overflow:hidden;
+  flex-shrink:0;
 }
-.modal-head h2{font-size:16px;color:#1a237e}
-.modal-head .sub{font-size:13px;color:#666;margin-left:12px;font-weight:400}
-.btn-close{
-  background:none;border:none;
-  font-size:26px;cursor:pointer;
-  color:#999;line-height:1;
-  padding:0 4px;
-}
-.btn-close:hover{color:#333}
 
-.chart-box{position:relative;height:400px}
+.graph-slot{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  border-bottom:1px solid #cfd8dc;
+  position:relative;
+  transition:background .15s;
+  min-height:0;
+}
+.graph-slot:last-child{border-bottom:none}
+
+.graph-slot.selected{
+  background:#e8eaf6;
+  box-shadow:inset 0 0 0 2px #3949ab;
+}
+
+/* ===== スロットヘッダー ===== */
+.slot-header{
+  display:flex;
+  align-items:center;
+  padding:5px 8px;
+  gap:6px;
+  background:rgba(255,255,255,.75);
+  border-bottom:1px solid #dde;
+  cursor:pointer;
+  flex-shrink:0;
+  min-height:32px;
+  user-select:none;
+}
+.slot-header:hover{background:rgba(255,255,255,.95)}
+.graph-slot.selected .slot-header{
+  background:rgba(57,73,171,.12);
+}
+
+.slot-badge{
+  background:#78909c;
+  color:#fff;
+  border-radius:50%;
+  width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+  flex-shrink:0;
+  transition:background .15s;
+}
+.graph-slot.selected .slot-badge{background:#e53935}
+
+.slot-label{
+  font-size:10px;
+  font-weight:700;
+  color:#546e7a;
+  flex-shrink:0;
+  letter-spacing:.3px;
+}
+.graph-slot.selected .slot-label{color:#1a237e}
+
+.slot-title{
+  font-size:10px;
+  color:#90a4ae;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  flex:1;
+}
+.graph-slot.selected .slot-title{color:#5c6bc0}
+
+.slot-select-hint{
+  font-size:9px;
+  color:#bbb;
+  flex-shrink:0;
+  white-space:nowrap;
+}
+.graph-slot.selected .slot-select-hint{
+  color:#7986cb;
+  font-weight:600;
+}
+
+/* ===== スロットボディ ===== */
+.slot-body{
+  flex:1;
+  position:relative;
+  min-height:0;
+}
+
+.slot-empty{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:#b0bec5;
+  font-size:12px;
+  line-height:1.9;
+  text-align:center;
+  pointer-events:none;
+}
+.graph-slot.selected .slot-empty{color:#7986cb}
+
+.slot-empty-icon{
+  font-size:32px;
+  margin-bottom:6px;
+  opacity:.35;
+  line-height:1;
+}
+
+.slot-canvas-wrap{
+  position:absolute;
+  inset:0;
+  padding:4px 6px 6px 4px;
+  display:none;
+}
+.slot-canvas-wrap.visible{display:block}
 
 /* ===== ローディング ===== */
 .loading{
@@ -160,7 +258,7 @@ td:hover{background:#bbdefb !important}
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  height:80vh;
+  height:calc(100vh - 52px);
   gap:12px;
 }
 .loading .spinner{
@@ -189,24 +287,78 @@ td:hover{background:#bbdefb !important}
   <p>データを読み込み中...</p>
 </div>
 
-<div class="table-wrap" id="tableWrap" style="display:none">
-  <table>
-    <thead><tr id="headRow"></tr></thead>
-    <tbody id="tbody"></tbody>
-  </table>
-</div>
+<div class="main-layout" id="mainLayout" style="display:none">
 
-<div class="overlay" id="overlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h2 id="modalTitle"></h2>
-      <button class="btn-close" id="btnClose">&times;</button>
-    </div>
-    <div class="chart-box">
-      <canvas id="chartCanvas"></canvas>
-    </div>
+  <!-- 左75%: テーブル -->
+  <div class="table-panel" id="tableWrap">
+    <table>
+      <thead><tr id="headRow"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
-</div>
+
+  <!-- 右25%: グラフパネル -->
+  <div class="graph-panel" id="graphPanel">
+
+    <!-- スロット 1 -->
+    <div class="graph-slot selected" id="slot0">
+      <div class="slot-header" onclick="selectSlot(0)">
+        <div class="slot-badge">1</div>
+        <span class="slot-label">グラフ1</span>
+        <span class="slot-title" id="slotTitle0">-</span>
+        <span class="slot-select-hint" id="slotHint0">選択中</span>
+      </div>
+      <div class="slot-body">
+        <div class="slot-empty" id="slotEmpty0">
+          <div class="slot-empty-icon">&#9646;</div>
+          選択中<br>表をクリックして表示
+        </div>
+        <div class="slot-canvas-wrap" id="slotCanvasWrap0">
+          <canvas id="chartCanvas0"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- スロット 2 -->
+    <div class="graph-slot" id="slot1">
+      <div class="slot-header" onclick="selectSlot(1)">
+        <div class="slot-badge">2</div>
+        <span class="slot-label">グラフ2</span>
+        <span class="slot-title" id="slotTitle1">-</span>
+        <span class="slot-select-hint" id="slotHint1">クリックして選択</span>
+      </div>
+      <div class="slot-body">
+        <div class="slot-empty" id="slotEmpty1">
+          <div class="slot-empty-icon">&#9646;</div>
+          クリックして選択
+        </div>
+        <div class="slot-canvas-wrap" id="slotCanvasWrap1">
+          <canvas id="chartCanvas1"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- スロット 3 -->
+    <div class="graph-slot" id="slot2">
+      <div class="slot-header" onclick="selectSlot(2)">
+        <div class="slot-badge">3</div>
+        <span class="slot-label">グラフ3</span>
+        <span class="slot-title" id="slotTitle2">-</span>
+        <span class="slot-select-hint" id="slotHint2">クリックして選択</span>
+      </div>
+      <div class="slot-body">
+        <div class="slot-empty" id="slotEmpty2">
+          <div class="slot-empty-icon">&#9646;</div>
+          クリックして選択
+        </div>
+        <div class="slot-canvas-wrap" id="slotCanvasWrap2">
+          <canvas id="chartCanvas2"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /graph-panel -->
+</div><!-- /main-layout -->
 
 <script>
 /* ============================================================
@@ -269,12 +421,15 @@ const FH = {
   NxFSales:34, NxFOP:35, NxFOdP:36, NxFNp:37, NxFEPS:38, FDivYield:39, CFTotal:40,
 };
 
-let allStocks = [];   // 全データ
-let viewStocks = [];  // フィルタ後
+let allStocks = [];
+let viewStocks = [];
 let sortKey = null;
 let sortAsc = true;
-let chartInstance = null;
 let dragSrcIdx = null;
+
+// グラフスロット管理
+let selectedSlot = 0;
+const chartInstances = [null, null, null];
 
 /* ============================================================
    初期化
@@ -297,42 +452,162 @@ async function init() {
   sortBy('code', true);
 
   document.getElementById('loading').style.display = 'none';
-  document.getElementById('tableWrap').style.display = '';
+  document.getElementById('mainLayout').style.display = 'flex';
   updateCount();
 
-  // イベント
+  // 検索
   document.getElementById('searchBox').addEventListener('input', onSearch);
-  document.getElementById('overlay').addEventListener('click', e => {
-    if (e.target.id === 'overlay') closeModal();
-  });
-  document.getElementById('btnClose').addEventListener('click', closeModal);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   // 矢印キーでテーブルスクロール
   const scrollStep = 100;
   document.addEventListener('keydown', e => {
-    // 検索ボックスにフォーカス中は無効
     if (document.activeElement === document.getElementById('searchBox')) return;
-    // モーダル表示中は無効
-    if (document.getElementById('overlay').classList.contains('active')) return;
     const wrap = document.getElementById('tableWrap');
     switch (e.key) {
-      case 'ArrowRight':
-        wrap.scrollLeft += scrollStep;
-        e.preventDefault();
-        break;
-      case 'ArrowLeft':
-        wrap.scrollLeft -= scrollStep;
-        e.preventDefault();
-        break;
-      case 'ArrowDown':
-        wrap.scrollTop += scrollStep;
-        e.preventDefault();
-        break;
-      case 'ArrowUp':
-        wrap.scrollTop -= scrollStep;
-        e.preventDefault();
-        break;
+      case 'ArrowRight': wrap.scrollLeft += scrollStep; e.preventDefault(); break;
+      case 'ArrowLeft':  wrap.scrollLeft -= scrollStep; e.preventDefault(); break;
+      case 'ArrowDown':  wrap.scrollTop  += scrollStep; e.preventDefault(); break;
+      case 'ArrowUp':    wrap.scrollTop  -= scrollStep; e.preventDefault(); break;
+    }
+  });
+}
+
+/* ============================================================
+   グラフスロット選択
+   ============================================================ */
+function selectSlot(slotIdx) {
+  selectedSlot = slotIdx;
+  for (let i = 0; i < 3; i++) {
+    const slot = document.getElementById('slot' + i);
+    const hint = document.getElementById('slotHint' + i);
+    const empty = document.getElementById('slotEmpty' + i);
+    const isSelected = (i === slotIdx);
+    slot.classList.toggle('selected', isSelected);
+    hint.textContent = isSelected ? '選択中' : 'クリックして選択';
+    // チャートがない場合は空表示を更新
+    if (!chartInstances[i]) {
+      empty.innerHTML = isSelected
+        ? '<div class="slot-empty-icon">&#9646;</div>選択中<br>表をクリックして表示'
+        : '<div class="slot-empty-icon">&#9646;</div>クリックして選択';
+    }
+  }
+}
+
+/* ============================================================
+   グラフスロットに表示
+   ============================================================ */
+function showChartInSlot(stock, colKey) {
+  // chart:false 列は price にフォールバック
+  const colDef = COLS.find(c => c.key === colKey && c.chart) || COLS.find(c => c.key === 'price');
+  if (!colDef) return;
+  const effectiveKey = colDef.key;
+
+  let labels, values, unit, title;
+  unit = colDef.unit;
+
+  if (colDef.quarterly) {
+    title = stock.code + ' ' + (stock.name || '') + ' / ' + colDef.chartLabel;
+    const result = computeQuarterlyData(stock, effectiveKey);
+    labels = result.labels;
+    values = result.values;
+    if (['NP','Sales','OP','OdP'].includes(effectiveKey)) unit = '億円';
+  } else if (effectiveKey === 'price') {
+    title = stock.code + ' ' + (stock.name || '') + ' / ' + colDef.label;
+    const ph = stock.ph || [];
+    labels = ph.map(p => p[0]);
+    values = ph.map(p => p[1]);
+  } else {
+    title = stock.code + ' ' + (stock.name || '') + ' / ' + colDef.label;
+    const fh = stock.fh || [];
+    const idx = FH[effectiveKey];
+    if (idx == null) return;
+    const filtered = fh.filter(row => row[idx] != null);
+    labels = filtered.map(row => row[0]);
+
+    const bignumKeys = ['NP','Sales','OP','OdP','TA','Eq','CFI','CFF','CFTotal','CashEq','CFO','MarketCap',
+                        'FSales','FOP','FOdP','FNP','NxFSales','NxFOP','NxFOdP','NxFNp'];
+    if (bignumKeys.includes(effectiveKey)) {
+      values = filtered.map(row => Math.round(row[idx] / 10000000) / 10);
+      unit = '億円';
+    } else if (colDef.type === 'percent') {
+      values = filtered.map(row => Math.round(row[idx] * 10000) / 100);
+      unit = '%';
+    } else {
+      values = filtered.map(row => row[idx]);
+    }
+  }
+
+  if (!labels || !labels.length) return;
+
+  const slotIdx = selectedSlot;
+
+  // 既存チャート破棄
+  if (chartInstances[slotIdx]) {
+    chartInstances[slotIdx].destroy();
+    chartInstances[slotIdx] = null;
+  }
+
+  // タイトル更新
+  document.getElementById('slotTitle' + slotIdx).textContent = title;
+
+  // 空表示を隠し、キャンバスを表示
+  document.getElementById('slotEmpty' + slotIdx).style.display = 'none';
+  const canvasWrap = document.getElementById('slotCanvasWrap' + slotIdx);
+  canvasWrap.classList.add('visible');
+
+  // チャート色
+  const bgColors = values.map(v =>
+    v < 0 ? 'rgba(211,47,47,0.7)' : hexToRGBA(colDef.color, 0.7)
+  );
+  const borderColors = values.map(v =>
+    v < 0 ? 'rgba(211,47,47,1)' : colDef.color
+  );
+
+  const canvas = document.getElementById('chartCanvas' + slotIdx);
+  const ctx = canvas.getContext('2d');
+  chartInstances[slotIdx] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: colDef.chartLabel || colDef.label,
+        data: values,
+        backgroundColor: bgColors,
+        borderColor: borderColors,
+        borderWidth: 1,
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          callbacks: {
+            label: ctx => (colDef.chartLabel || colDef.label) + ': ' + formatNum(ctx.parsed.y) + ' ' + unit
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            maxRotation: 60,
+            autoSkip: true,
+            maxTicksLimit: 20,
+            font: {size: 9}
+          },
+          grid: {display: false}
+        },
+        y: {
+          ticks: {
+            callback: v => formatCompact(v),
+            font: {size: 10}
+          },
+          grid: {color: 'rgba(0,0,0,.06)'}
+        }
+      },
+      animation: {duration: 300}
     }
   });
 }
@@ -359,7 +634,6 @@ function buildHeader() {
       span.id = 'sort-' + col.key;
       th.appendChild(span);
     }
-    // 4列目以降はドラッグ&ドロップで並べ替え可能
     if (i >= 3) {
       th.draggable = true;
       th.addEventListener('dragstart', e => {
@@ -379,11 +653,8 @@ function buildHeader() {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         tr.querySelectorAll('th').forEach(el => el.classList.remove('drag-over-left', 'drag-over-right'));
-        if (dragSrcIdx < targetIdx) {
-          th.classList.add('drag-over-right');
-        } else {
-          th.classList.add('drag-over-left');
-        }
+        if (dragSrcIdx < targetIdx) th.classList.add('drag-over-right');
+        else th.classList.add('drag-over-left');
       });
       th.addEventListener('dragleave', () => {
         th.classList.remove('drag-over-left', 'drag-over-right');
@@ -464,10 +735,9 @@ function renderTable() {
           break;
       }
 
-      // クリックでチャート表示
-      if (col.chart) {
-        td.addEventListener('click', () => showChart(s, col.key));
-      }
+      // 全セルクリックでグラフスロットに表示
+      // chart:false 列は price にフォールバック
+      td.addEventListener('click', () => showChartInSlot(s, col.key));
 
       tr.appendChild(td);
     });
@@ -498,7 +768,6 @@ function sortBy(key, asc) {
   viewStocks.sort((a, b) => {
     let va = a[key];
     let vb = b[key];
-    // null は最後
     if (va == null && vb == null) return 0;
     if (va == null) return 1;
     if (vb == null) return -1;
@@ -547,126 +816,6 @@ function updateCount() {
 }
 
 /* ============================================================
-   チャート表示
-   ============================================================ */
-function showChart(stock, colKey) {
-  const colDef = COLS.find(c => c.key === colKey);
-  if (!colDef || !colDef.chart) return;
-
-  let labels, values, title, unit, bgColor;
-  unit = colDef.unit;
-  bgColor = colDef.color;
-  if (colDef.quarterly) {
-    // 四半期別表示（累積値→四半期ごとに変換）
-    title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.chartLabel;
-    const result = computeQuarterlyData(stock, colKey);
-    labels = result.labels;
-    values = result.values;
-    if (['NP','Sales','OP','OdP'].includes(colKey)) unit = '億円';
-  } else if (colKey === 'price') {
-    title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.label;
-    // 月次株価データ
-    const ph = stock.ph || [];
-    labels = ph.map(p => p[0]);
-    values = ph.map(p => p[1]);
-  } else {
-    title = stock.code + ' ' + (stock.name || '') + ' - ' + colDef.label;
-    // 財務データ履歴
-    const fh = stock.fh || [];
-    const idx = FH[colKey];
-    if (idx == null) return;
-
-    // nullでないデータのみ
-    const filtered = fh.filter(row => row[idx] != null);
-    labels = filtered.map(row => row[0]);
-
-    const bignumKeys = ['NP','Sales','OP','OdP','TA','Eq','CFI','CFF','CFTotal','CashEq','CFO','MarketCap',
-                        'FSales','FOP','FOdP','FNP','NxFSales','NxFOP','NxFOdP','NxFNp'];
-    if (bignumKeys.includes(colKey)) {
-      values = filtered.map(row => Math.round(row[idx] / 10000000) / 10);
-      unit = '億円';
-    } else if (colDef.type === 'percent') {
-      // EqAR, FPayoutRatioAnn等: fhには生の値（0-1の比率）→%に変換
-      values = filtered.map(row => Math.round(row[idx] * 10000) / 100);
-      unit = '%';
-    } else {
-      values = filtered.map(row => row[idx]);
-    }
-  }
-
-  if (!labels.length) {
-    alert('この銘柄の' + colDef.label + 'の過去データがありません。');
-    return;
-  }
-
-  // チャート色（負の値は赤）
-  const bgColors = values.map(v =>
-    v < 0 ? 'rgba(211,47,47,0.7)' : hexToRGBA(bgColor, 0.7)
-  );
-  const borderColors = values.map(v =>
-    v < 0 ? 'rgba(211,47,47,1)' : bgColor
-  );
-
-  document.getElementById('modalTitle').innerHTML =
-    title + '<span class="sub">' + unit + '</span>';
-
-  // 既存チャート破棄
-  if (chartInstance) {
-    chartInstance.destroy();
-    chartInstance = null;
-  }
-
-  const ctx = document.getElementById('chartCanvas').getContext('2d');
-  chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: colDef.chartLabel || colDef.label,
-        data: values,
-        backgroundColor: bgColors,
-        borderColor: borderColors,
-        borderWidth: 1,
-        borderRadius: 2,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {display: false},
-        tooltip: {
-          callbacks: {
-            label: ctx => (colDef.chartLabel || colDef.label) + ': ' + formatNum(ctx.parsed.y) + ' ' + unit
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: {
-            maxRotation: 60,
-            autoSkip: true,
-            maxTicksLimit: 30,
-            font: {size: 10}
-          },
-          grid: {display: false}
-        },
-        y: {
-          ticks: {
-            callback: v => formatCompact(v),
-            font: {size: 11}
-          },
-          grid: {color: 'rgba(0,0,0,.06)'}
-        }
-      },
-      animation: {duration: 400}
-    }
-  });
-
-  document.getElementById('overlay').classList.add('active');
-}
-
-/* ============================================================
    四半期データ変換（累積値→四半期ごと）
    ============================================================ */
 function computeQuarterlyData(stock, colKey) {
@@ -674,7 +823,6 @@ function computeQuarterlyData(stock, colKey) {
   const idx = FH[colKey];
   const fyIdx = FH.CurFYEn;
 
-  // CurFYEnでグループ化
   const fyGroups = {};
   for (const row of fh) {
     const fy = row[fyIdx];
@@ -686,35 +834,24 @@ function computeQuarterlyData(stock, colKey) {
 
   const labels = [];
   const values = [];
-
-  // 事業年度でソート
   const sortedFYs = Object.keys(fyGroups).sort();
 
   for (const fy of sortedFYs) {
     const entries = fyGroups[fy];
-    // 開示日でソート
     entries.sort((a, b) => a.date.localeCompare(b.date));
 
-    // CurFYEnからFY表示用ラベルを生成（例: "2022-03-31" → "FY2021"）
     const fyYear = fy.substring(0, 4);
     const fyMonth = parseInt(fy.substring(5, 7));
-    // 事業年度の開始年: 決算月が1-3月なら前年度開始
     const startYear = fyMonth <= 3 ? parseInt(fyYear) - 1 : parseInt(fyYear);
-
-    // 2020年はデータ不足のためスキップ
     if (startYear === 2020) continue;
 
-    // 累積値→四半期値に変換（最大4四半期）
     let prevCumulative = 0;
     const maxQ = Math.min(entries.length, 4);
     for (let i = 0; i < maxQ; i++) {
       const qNum = i + 1;
       const qValue = entries[i].value - prevCumulative;
       prevCumulative = entries[i].value;
-
       labels.push(startYear + 'Q' + qNum);
-
-      // 億円単位に変換（EPS以外）
       if (colKey === 'EPS') {
         values.push(Math.round(qValue * 100) / 100);
       } else {
@@ -724,14 +861,6 @@ function computeQuarterlyData(stock, colKey) {
   }
 
   return {labels, values};
-}
-
-function closeModal() {
-  document.getElementById('overlay').classList.remove('active');
-  if (chartInstance) {
-    chartInstance.destroy();
-    chartInstance = null;
-  }
 }
 
 /* ============================================================
@@ -752,7 +881,6 @@ function formatDec(n) {
 
 function formatBigNum(n) {
   if (n == null) return '-';
-  // 億単位で表示
   const oku = n / 100000000;
   if (Math.abs(oku) >= 1) {
     return oku.toLocaleString('ja-JP', {
@@ -760,7 +888,6 @@ function formatBigNum(n) {
       maximumFractionDigits: 0
     }) + '億';
   }
-  // 百万単位
   const hyakuman = n / 1000000;
   if (Math.abs(hyakuman) >= 1) {
     return hyakuman.toLocaleString('ja-JP', {
