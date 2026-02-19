@@ -811,14 +811,17 @@ function showChartInSlot(stock, colKey) {
   } else if (effectiveKey === 'price') {
     title = stock.code + ' ' + (stock.name || '') + ' / ' + colDef.label;
     const ph = stock.ph || [];
-    labels = ph.map(p => p[0]);
-    values = ph.map(p => p[1]);
+    const startYM = getQ1_2021_StartYM(stock);
+    const filteredPh = ph.filter(p => p[0] >= startYM);
+    labels = filteredPh.map(p => p[0]);
+    values = filteredPh.map(p => p[1]);
   } else {
     title = stock.code + ' ' + (stock.name || '') + ' / ' + colDef.label;
     const fh = stock.fh || [];
     const idx = FH[effectiveKey];
     if (idx == null) return;
-    const filtered = fh.filter(row => row[idx] != null);
+    const startYM = getQ1_2021_StartYM(stock);
+    const filtered = fh.filter(row => row[idx] != null && row[0].substring(0, 7) >= startYM);
     labels = filtered.map(row => row[0]);
 
     const bignumKeys = ['NP','Sales','OP','OdP','TA','Eq','CFI','CFF','CFTotal','CashEq','CFO','MarketCap',
@@ -1146,6 +1149,24 @@ function updateCount() {
 }
 
 /* ============================================================
+   2021年第一四半期の開始年月を算出
+   当事業年度終了日の月日の翌日が第一四半期開始日
+   ============================================================ */
+function getQ1_2021_StartYM(stock) {
+  const fyEnd = stock.CurFYEn;
+  if (!fyEnd) return '2021-01';
+  const fyEndMonth = parseInt(fyEnd.substring(5, 7));
+  const q1Month = (fyEndMonth % 12) + 1;
+  let q1Year;
+  if (fyEndMonth <= 3) {
+    q1Year = 2021;
+  } else {
+    q1Year = (q1Month <= fyEndMonth) ? 2021 : 2020;
+  }
+  return q1Year + '-' + String(q1Month).padStart(2, '0');
+}
+
+/* ============================================================
    四半期データ変換（累積値→四半期ごと）
    ============================================================ */
 function computeQuarterlyData(stock, colKey) {
@@ -1173,7 +1194,7 @@ function computeQuarterlyData(stock, colKey) {
     const fyYear = fy.substring(0, 4);
     const fyMonth = parseInt(fy.substring(5, 7));
     const startYear = fyMonth <= 3 ? parseInt(fyYear) - 1 : parseInt(fyYear);
-    if (startYear === 2020) continue;
+    if (startYear < 2021) continue;
 
     let prevCumulative = 0;
     const maxQ = Math.min(entries.length, 4);
