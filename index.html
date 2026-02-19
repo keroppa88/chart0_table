@@ -216,6 +216,8 @@ td:hover{background:#bbdefb !important}
 
 /* ===== グラフスロット選択セルのハイライト ===== */
 td.cell-chart-selected{background:#aaff44 !important;}
+/* ===== 選択銘柄名の薄い黄緑ハイライト ===== */
+td.name-highlight{background:#d5f5d0 !important;}
 
 /* ===== グラフパネル ===== */
 .graph-panel{
@@ -1199,13 +1201,22 @@ function refreshHighlights() {
   document.querySelectorAll('#tbody td.cell-chart-selected').forEach(td => {
     td.classList.remove('cell-chart-selected');
   });
+  document.querySelectorAll('#tbody td.name-highlight').forEach(td => {
+    td.classList.remove('name-highlight');
+  });
   // スロット選択中のセルに黄緑を適用（最大3カ所）
+  // 同時に、選択された銘柄名セルを薄い黄緑でハイライト
   slotSelections.forEach(sel => {
     if (!sel) return;
     const td = document.querySelector(
       '#tbody td[data-code="' + sel.code + '"][data-col="' + sel.colKey + '"]'
     );
     if (td) td.classList.add('cell-chart-selected');
+    // 銘柄名セルをハイライト
+    const nameTd = document.querySelector(
+      '#tbody td[data-code="' + sel.code + '"][data-col="name"]'
+    );
+    if (nameTd) nameTd.classList.add('name-highlight');
   });
 }
 
