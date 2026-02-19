@@ -178,7 +178,22 @@ th[draggable="true"]:active{cursor:grabbing}
 th.dragging{opacity:.4}
 th.drag-over-left{box-shadow:inset 3px 0 0 #ffeb3b}
 th.drag-over-right{box-shadow:inset -3px 0 0 #ffeb3b}
-th .sort-icon{font-size:10px;margin-left:3px;opacity:.7}
+th .sort-icon{
+  display:block;
+  font-size:10px;
+  margin-top:2px;
+  line-height:1;
+  letter-spacing:1px;
+  opacity:1;
+}
+th .sort-icon .sort-arrow{
+  opacity:.3;
+  cursor:pointer;
+}
+th .sort-icon .sort-arrow.active{
+  opacity:1;
+  color:#ffeb3b;
+}
 
 td{
   padding:7px 8px;
@@ -957,10 +972,20 @@ function buildHeader() {
     if (col.sortable) {
       th.dataset.key = col.key;
       th.addEventListener('click', () => onHeaderClick(col.key));
-      const span = document.createElement('span');
-      span.className = 'sort-icon';
-      span.id = 'sort-' + col.key;
-      th.appendChild(span);
+      const sortRow = document.createElement('span');
+      sortRow.className = 'sort-icon';
+      sortRow.id = 'sort-' + col.key;
+      const upArrow = document.createElement('span');
+      upArrow.className = 'sort-arrow';
+      upArrow.dataset.dir = 'asc';
+      upArrow.textContent = '\u25B2';
+      const downArrow = document.createElement('span');
+      downArrow.className = 'sort-arrow';
+      downArrow.dataset.dir = 'desc';
+      downArrow.textContent = '\u25BC';
+      sortRow.appendChild(upArrow);
+      sortRow.appendChild(downArrow);
+      th.appendChild(sortRow);
     }
     if (i >= 3) {
       th.draggable = true;
@@ -1118,10 +1143,18 @@ function updateSortIcons() {
   COLS.forEach(col => {
     if (!col.sortable) return;
     const el = document.getElementById('sort-' + col.key);
+    if (!el) return;
+    const arrows = el.querySelectorAll('.sort-arrow');
+    arrows.forEach(arrow => {
+      arrow.classList.remove('active');
+    });
     if (col.key === sortKey) {
-      el.textContent = sortAsc ? ' \u25B2' : ' \u25BC';
-    } else {
-      el.textContent = '';
+      arrows.forEach(arrow => {
+        if ((sortAsc && arrow.dataset.dir === 'asc') ||
+            (!sortAsc && arrow.dataset.dir === 'desc')) {
+          arrow.classList.add('active');
+        }
+      });
     }
   });
 }
